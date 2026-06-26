@@ -1,0 +1,20 @@
+.category-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+}
+
+.category-tag--celebration {
+  background-color: var(--celebration-tag);
+  color: var(--celebration-tag-text);
+}
+.category-tag--thankyou {
+  background-color: var(--thankyou-tag);
+  color: var(--thankyou-tag-text);
+}
+.category-tag--inspiration {
+  background-color: var(--inspiration-tag);
+  color: var(--inspiration-tag-text);
+}

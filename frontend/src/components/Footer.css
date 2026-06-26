@@ -1,0 +1,22 @@
+.footer {
+  background-color: var(--surface);
+  border-top: 1px solid var(--border);
+  color: var(--muted-text);
+}
+
+.footer__inner {
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-top: var(--space-4);
+  padding-bottom: var(--space-4);
+}
+
+@media (max-width: 640px) {
+  .footer__inner {
+    flex-direction: column;
+    text-align: center;
+  }
+}

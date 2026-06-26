@@ -1,0 +1,137 @@
+/* ============================================================================
+   Kudos Board — Design Tokens
+   Generated from the Figma design-system JSON. Light values live on :root,
+   dark values under [data-theme="dark"]. Components consume var(--token) only.
+   ============================================================================ */
+
+:root {
+  /* --- Base surface tokens (light) --- */
+  --background: #FAFAF8;
+  --foreground: #1A1A2E;
+  --surface: #FFFFFF;
+  --surface-hover: #F4F3F8;
+  --border: #E5E3EE;
+  --muted-text: #7B7898;
+  --input-bg: #F0EFF8;
+
+  /* --- Category: celebration --- */
+  --celebration-accent: #F4628A;
+  --celebration-accent-soft: #FDE8EF;
+  --celebration-accent-dark: #F93070;
+  --celebration-tag: #FCB6CA;
+  --celebration-tag-text: #8B1A3A;
+
+  /* --- Category: thankyou --- */
+  --thankyou-accent: #0EA5AC;
+  --thankyou-accent-soft: #DFFAFA;
+  --thankyou-accent-dark: #0B8A90;
+  --thankyou-tag: #9AEAEA;
+  --thankyou-tag-text: #0A4A4D;
+
+  /* --- Category: inspiration --- */
+  --inspiration-accent: #8B5CF6;
+  --inspiration-accent-soft: #EDE9FE;
+  --inspiration-accent-dark: #7C3AED;
+  --inspiration-tag: #C4B5FD;
+  --inspiration-tag-text: #3B1A80;
+
+  /* --- View-only filter: recent --- */
+  --recent-accent: #F59E0B;
+  --recent-accent-soft: #FEF3C7;
+  --recent-accent-dark: #D97706;
+  --recent-tag: #FCD34D;
+  --recent-tag-text: #78350F;
+
+  /* --- View-only filter: all --- */
+  --all-accent: #6366F1;
+  --all-accent-soft: #EEF2FF;
+  --all-accent-dark: #4F46E5;
+  --all-tag: #C7D2FE;
+  --all-tag-text: #312E81;
+
+  /* --- Semantic --- */
+  --danger: #EF4444;
+  --danger-soft: #FEE2E2;
+  --pinned: #F59E0B;
+  --pinned-border: #FCD34D;
+
+  /* --- Typography --- */
+  --font-heading: 'Poppins', sans-serif;
+  --font-body: 'Inter', sans-serif;
+
+  /* --- Spacing scale (8px base) --- */
+  --space-0: 0px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+
+  /* --- Radii --- */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
+  --radius-full: 9999px;
+
+  /* --- Shadows --- */
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.06), 0 0 1px rgba(0, 0, 0, 0.04);
+  --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.10), 0 0 1px rgba(0, 0, 0, 0.06);
+  --shadow-modal: 0 20px 60px rgba(0, 0, 0, 0.18), 0 0 1px rgba(0, 0, 0, 0.08);
+  --shadow-button: 0 2px 8px rgba(0, 0, 0, 0.10);
+  --shadow-pinned: 0 0 0 2px #FCD34D, 0 8px 24px rgba(245, 158, 11, 0.18);
+
+  /* --- Transitions --- */
+  --transition-fast: 150ms ease;
+  --transition-base: 200ms ease;
+  --transition-slow: 300ms ease;
+}
+
+[data-theme="dark"] {
+  /* --- Base surface tokens (dark) --- */
+  --background: #0F0F11;
+  --foreground: #F0EFF4;
+  --surface: #1C1C24;
+  --surface-hover: #242430;
+  --border: #2E2D3A;
+  --muted-text: #8E8CAA;
+  --input-bg: #232330;
+
+  /* --- Category: celebration (dark) --- */
+  --celebration-accent-soft: #3D1A24;
+  --celebration-tag: #6B2040;
+  --celebration-tag-text: #F4A8BF;
+
+  /* --- Category: thankyou (dark) --- */
+  --thankyou-accent-soft: #092828;
+  --thankyou-tag: #124040;
+  --thankyou-tag-text: #7ADADA;
+
+  /* --- Category: inspiration (dark) --- */
+  --inspiration-accent-soft: #1E1330;
+  --inspiration-tag: #2E1B55;
+  --inspiration-tag-text: #C4B5FD;
+
+  /* --- View-only filter: recent (dark) --- */
+  --recent-accent-soft: #281E06;
+  --recent-tag: #4A2E08;
+  --recent-tag-text: #FCD34D;
+
+  /* --- View-only filter: all (dark) --- */
+  --all-accent-soft: #16163A;
+  --all-tag: #252570;
+  --all-tag-text: #C7D2FE;
+
+  /* Shadows read a touch stronger on dark surfaces */
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.4), 0 0 1px rgba(0, 0, 0, 0.6);
+  --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 1px rgba(0, 0, 0, 0.6);
+  --shadow-modal: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 1px rgba(0, 0, 0, 0.6);
+}

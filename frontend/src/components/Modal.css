@@ -1,0 +1,149 @@
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  animation: fade-slide-up var(--transition-base) both;
+}
+
+.modal-card {
+  width: 100%;
+  max-height: calc(100vh - var(--space-8));
+  overflow-y: auto;
+  background-color: var(--surface);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-modal);
+}
+
+.modal-card__header {
+  position: sticky;
+  top: 0;
+  background-color: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-6) var(--space-6) var(--space-4);
+}
+.modal-card__header h2 {
+  color: var(--foreground);
+}
+
+.modal-card__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  color: var(--muted-text);
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+.modal-card__close:hover {
+  background-color: var(--surface-hover);
+  color: var(--foreground);
+}
+
+.modal-card__body {
+  padding: 0 var(--space-6) var(--space-6);
+}
+
+/* --- Shared form primitives used by both create modals --- */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.field__label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--foreground);
+}
+.field__label .req {
+  color: var(--danger);
+  margin-left: 2px;
+}
+
+.field__input,
+.field__select,
+.field__textarea {
+  width: 100%;
+  padding: var(--space-3);
+  background-color: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--foreground);
+  font-size: 0.875rem;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+.field__textarea {
+  resize: vertical;
+  min-height: 88px;
+}
+.field__input:focus,
+.field__select:focus,
+.field__textarea:focus {
+  outline: none;
+  border-color: var(--all-accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--all-accent) 30%, transparent);
+}
+.field__input--error,
+.field__textarea--error {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--danger) 25%, transparent);
+}
+
+.field__error {
+  font-size: 0.75rem;
+  color: var(--danger);
+}
+
+.modal-actions {
+  display: flex;
+  flex-direction: row-reverse;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+
+.btn {
+  padding: var(--space-3) var(--space-5);
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 0.875rem;
+  transition: background-color var(--transition-base), opacity var(--transition-base);
+}
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.btn--primary {
+  color: #fff;
+  background-color: var(--all-accent);
+  box-shadow: var(--shadow-button);
+}
+.btn--primary:hover:not(:disabled) {
+  background-color: var(--all-accent-dark);
+}
+
+/* Category-accented primary buttons (used by the Add Card modal). */
+.btn--cat-celebration { background-color: var(--celebration-accent); }
+.btn--cat-celebration:hover:not(:disabled) { background-color: var(--celebration-accent-dark); }
+.btn--cat-thankyou { background-color: var(--thankyou-accent); }
+.btn--cat-thankyou:hover:not(:disabled) { background-color: var(--thankyou-accent-dark); }
+.btn--cat-inspiration { background-color: var(--inspiration-accent); }
+.btn--cat-inspiration:hover:not(:disabled) { background-color: var(--inspiration-accent-dark); }
+.btn--ghost {
+  color: var(--foreground);
+  background-color: var(--surface-hover);
+}
+.btn--ghost:hover {
+  background-color: var(--border);
+}

@@ -1,0 +1,86 @@
+.board-header {
+  padding: var(--space-6) 0 var(--space-10);
+}
+
+/* Category-themed gradient strip behind the header. */
+.board-header--celebration {
+  background: linear-gradient(160deg, var(--celebration-accent-soft), var(--background));
+}
+.board-header--thankyou {
+  background: linear-gradient(160deg, var(--thankyou-accent-soft), var(--background));
+}
+.board-header--inspiration {
+  background: linear-gradient(160deg, var(--inspiration-accent-soft), var(--background));
+}
+
+.board-header__back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--muted-text);
+  margin-bottom: var(--space-6);
+  transition: color var(--transition-fast);
+}
+.board-header__back:hover {
+  color: var(--foreground);
+}
+
+.board-header__row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.board-header__titles {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.board-header__title {
+  color: var(--foreground);
+}
+
+.board-header__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.board-header__author {
+  color: var(--muted-text);
+}
+
+.board-header__add {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-5);
+  border-radius: var(--radius-full);
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: #fff;
+  background-color: var(--all-accent);
+  box-shadow: var(--shadow-button);
+  transition: background-color var(--transition-base), transform var(--transition-fast);
+}
+
+/* Themed Add button per category. */
+.board-header--celebration .board-header__add { background-color: var(--celebration-accent); }
+.board-header--thankyou .board-header__add { background-color: var(--thankyou-accent); }
+.board-header--inspiration .board-header__add { background-color: var(--inspiration-accent); }
+
+.board-header__add:hover {
+  transform: translateY(-1px);
+  filter: brightness(0.95);
+}
+
+@media (max-width: 640px) {
+  .board-header__row {
+    align-items: stretch;
+  }
+  .board-header__add {
+    justify-content: center;
+  }
+}
