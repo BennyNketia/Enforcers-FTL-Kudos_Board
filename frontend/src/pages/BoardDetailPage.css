@@ -1,15 +1,18 @@
 .board-detail {
   padding-top: var(--space-8);
-  padding-bottom: var(--space-16);
+  padding-bottom: var(--space-20);
+  /* Keep sparse boards from collapsing into a tiny strip above the footer. */
+  min-height: 42vh;
 }
 
 .board-detail__back {
   display: inline-block;
-  color: var(--muted-text);
+  color: var(--text-secondary);
   margin-bottom: var(--space-6);
+  transition: color var(--transition-fast);
 }
 .board-detail__back:hover {
-  color: var(--foreground);
+  color: var(--text-primary);
 }
 
 .board-detail__error {

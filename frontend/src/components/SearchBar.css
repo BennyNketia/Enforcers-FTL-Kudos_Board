@@ -2,18 +2,19 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  height: 44px;
+  height: 48px;
   width: 100%;
-  padding: 0 var(--space-2) 0 var(--space-3);
-  background-color: var(--input-bg);
+  max-width: 420px;
+  padding: 0 6px 0 var(--space-4);
+  background-color: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-full);
   transition: box-shadow var(--transition-base), border-color var(--transition-base);
 }
 
 .search-bar:focus-within {
-  border-color: var(--all-accent);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--all-accent) 35%, transparent);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 25%, transparent);
 }
 
 .search-bar__icon {
@@ -27,7 +28,7 @@
   background: transparent;
   border: none;
   outline: none;
-  color: var(--foreground);
+  color: var(--text-primary);
 }
 .search-bar__input::placeholder {
   color: var(--muted-text);
@@ -37,27 +38,35 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   border-radius: var(--radius-full);
   color: var(--muted-text);
   transition: background-color var(--transition-fast), color var(--transition-fast);
 }
 .search-bar__clear:hover {
   background-color: var(--surface-hover);
-  color: var(--foreground);
+  color: var(--text-primary);
 }
 
 .search-bar__submit {
   flex: 0 0 auto;
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-lg);
+  height: 36px;
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-full);
   font-size: 0.875rem;
   font-weight: 600;
-  color: #fff;
-  background-color: var(--all-accent);
-  transition: background-color var(--transition-base);
+  color: var(--primary-contrast);
+  background-image: var(--gradient-primary);
+  transition: filter var(--transition-base), transform var(--transition-fast);
 }
 .search-bar__submit:hover {
-  background-color: var(--all-accent-dark);
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+  .search-bar {
+    max-width: none;
+  }
 }

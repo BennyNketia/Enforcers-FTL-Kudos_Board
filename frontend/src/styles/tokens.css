@@ -93,17 +93,63 @@
   --transition-fast: 150ms ease;
   --transition-base: 200ms ease;
   --transition-slow: 300ms ease;
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* ==========================================================================
+     SaaS dashboard layer — added in the polish pass.
+     New semantic aliases (the names used across the redesigned components),
+     layered surfaces, gradients, and a shadow scale. These sit on top of the
+     base tokens above so older components keep resolving their original vars.
+     ========================================================================== */
+
+  /* --- Primary accent (purple/blue) — aliases the indigo "all" accent --- */
+  --primary: #6366F1;
+  --primary-hover: #4F46E5;
+  --primary-soft: #EEF2FF;
+  --primary-contrast: #FFFFFF;
+
+  /* --- Requested semantic aliases --- */
+  --bg: var(--background);
+  --text-primary: var(--foreground);
+  --text-secondary: var(--muted-text);
+  --celebration: var(--celebration-accent);
+  --thank-you: var(--thankyou-accent);
+  --inspiration: var(--inspiration-accent);
+
+  /* --- Layered surfaces (elevated reads brighter than surface in dark) --- */
+  --surface-elevated: #FFFFFF;
+  --surface-translucent: color-mix(in srgb, var(--surface) 80%, transparent);
+
+  /* --- Shadow scale (sm/md/lg requested) --- */
+  --shadow-sm: 0 1px 2px rgba(17, 12, 46, 0.06), 0 1px 3px rgba(17, 12, 46, 0.04);
+  --shadow-md: 0 6px 18px rgba(17, 12, 46, 0.10), 0 2px 6px rgba(17, 12, 46, 0.05);
+  --shadow-lg: 0 18px 50px rgba(17, 12, 46, 0.16), 0 4px 12px rgba(17, 12, 46, 0.08);
+  --shadow-primary: 0 6px 18px color-mix(in srgb, var(--primary) 36%, transparent);
+
+  /* --- Gradients (used sparingly: hero, primary buttons, brand mark) --- */
+  --gradient-primary: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
+  --gradient-hero:
+    radial-gradient(120% 120% at 12% 8%, color-mix(in srgb, var(--inspiration-accent) 16%, transparent) 0%, transparent 45%),
+    radial-gradient(120% 120% at 88% 12%, color-mix(in srgb, var(--celebration-accent) 16%, transparent) 0%, transparent 42%),
+    radial-gradient(140% 140% at 50% 120%, color-mix(in srgb, var(--primary) 14%, transparent) 0%, transparent 55%),
+    var(--background);
+  --gradient-celebration: linear-gradient(135deg, var(--celebration-accent) 0%, #FF8FB1 100%);
+  --gradient-thankyou: linear-gradient(135deg, var(--thankyou-accent) 0%, #34D399 100%);
+  --gradient-inspiration: linear-gradient(135deg, var(--inspiration-accent) 0%, #C084FC 100%);
+
+  /* --- Media overlay so titles stay legible over GIFs/images --- */
+  --overlay-media: linear-gradient(to top, rgba(15, 12, 30, 0.62) 0%, rgba(15, 12, 30, 0.12) 45%, transparent 75%);
 }
 
 [data-theme="dark"] {
-  /* --- Base surface tokens (dark) --- */
-  --background: #0F0F11;
-  --foreground: #F0EFF4;
-  --surface: #1C1C24;
-  --surface-hover: #242430;
-  --border: #2E2D3A;
-  --muted-text: #8E8CAA;
-  --input-bg: #232330;
+  /* --- Base surface tokens (dark) — layered: bg deepest → surface → elevated --- */
+  --background: #0E0E13;
+  --foreground: #F1F0F7;
+  --surface: #17171F;
+  --surface-hover: #25252F;
+  --border: #2C2B38;
+  --muted-text: #9C9AB8;
+  --input-bg: #20202B;
 
   /* --- Category: celebration (dark) --- */
   --celebration-accent-soft: #3D1A24;
@@ -134,4 +180,26 @@
   --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.4), 0 0 1px rgba(0, 0, 0, 0.6);
   --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 1px rgba(0, 0, 0, 0.6);
   --shadow-modal: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 1px rgba(0, 0, 0, 0.6);
+
+  /* --- Dark overrides for the SaaS dashboard layer --- */
+  /* surface-elevated reads brighter than surface so stacked panels separate. */
+  --surface-elevated: #20202B;
+
+  --primary: #818CF8;
+  --primary-hover: #A5B4FC;
+  --primary-soft: #1E1E3A;
+  --primary-contrast: #0E0E13;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 6px 18px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 18px 50px rgba(0, 0, 0, 0.62), 0 4px 12px rgba(0, 0, 0, 0.5);
+  --shadow-primary: 0 6px 18px rgba(0, 0, 0, 0.5);
+
+  --gradient-hero:
+    radial-gradient(120% 120% at 12% 8%, color-mix(in srgb, var(--inspiration-accent) 26%, transparent) 0%, transparent 45%),
+    radial-gradient(120% 120% at 88% 12%, color-mix(in srgb, var(--celebration-accent) 22%, transparent) 0%, transparent 42%),
+    radial-gradient(140% 140% at 50% 120%, color-mix(in srgb, var(--primary) 22%, transparent) 0%, transparent 55%),
+    var(--background);
+
+  --overlay-media: linear-gradient(to top, rgba(0, 0, 0, 0.78) 0%, rgba(0, 0, 0, 0.25) 45%, transparent 75%);
 }

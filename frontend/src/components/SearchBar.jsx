@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { SearchIcon, CloseIcon } from './icons.jsx'
 import './SearchBar.css'
 
@@ -7,6 +7,12 @@ import './SearchBar.css'
 export default function SearchBar({ value, onChange, onSubmit, onClear, placeholder = 'Search boards by title…' }) {
   // Local draft so typing doesn't refetch on every keystroke — we commit on submit.
   const [draft, setDraft] = useState(value ?? '')
+
+  // Keep the draft in sync when the parent resets the committed value
+  // (e.g. a Quick Action jumps to a filter and clears the search).
+  useEffect(() => {
+    setDraft(value ?? '')
+  }, [value])
 
   function handleChange(e) {
     const next = e.target.value

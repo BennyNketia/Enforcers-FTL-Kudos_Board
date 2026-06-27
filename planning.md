@@ -67,34 +67,47 @@ user's **theme preference** (`kudos-theme`), since it's a per-device UI preferen
 ```
 App (router, theme provider/state)
 │
-├── Header
+├── Header                          (sticky nav: brand · Create Board · ThemeToggle)
 │   └── ThemeToggle
 │
-├── Route "/" → HomePage
-│   ├── Banner
-│   ├── section.controls
-│   │   ├── FilterBar          (Create New Board button lives here)
-│   │   └── SearchBar
-│   ├── BoardGrid
-│   │   ├── BoardGridSkeleton   (loading)
-│   │   ├── EmptyState          (empty)
-│   │   └── BoardCard[]         (populated)
-│   └── CreateBoardModal        (portal, toggled from FilterBar)
+├── Route "/" → HomePage            (SaaS dashboard layout)
+│   ├── Hero                        (gradient backdrop, headline, CTAs, 3 StatCards)
+│   ├── QuickActions                (3 entry-point cards: create / inspiration / recent)
+│   ├── HighlightedBoards           (2–3 newest boards as larger featured BoardCards)
+│   │   └── BoardCard[] (featured)
+│   ├── section#all-boards
+│   │   ├── section-head            (title + "New board" button)
+│   │   ├── home__toolbar
+│   │   │   ├── FilterBar           (category pills only — controlled)
+│   │   │   └── SearchBar
+│   │   └── BoardGrid
+│   │       ├── BoardGridSkeleton   (loading)
+│   │       ├── EmptyState          (no results / no boards)
+│   │       └── BoardCard[]         (populated)
+│   └── CreateBoardModal            (portal; opened from Header / Hero / QuickActions / section-head / empty state)
 │
 ├── Route "/boards/:boardId" → BoardDetailPage
-│   ├── BoardDetailHeader       (Add Card button lives here)
+│   ├── BoardDetailHeader           (back link, category badge, title, author, card-count, Add Card)
 │   ├── CardGrid
-│   │   ├── BoardGridSkeleton   (loading — reused)
-│   │   ├── EmptyState          (empty — reused)
-│   │   └── KudoCard[]          (populated)
+│   │   ├── BoardGridSkeleton       (loading — reused)
+│   │   ├── EmptyState              (empty — reused, polished panel)
+│   │   └── KudoCard[]              (populated)
 │   │       └── UpvoteButton
-│   └── CreateCardModal         (portal, toggled from BoardDetailHeader)
+│   └── CreateCardModal             (portal, toggled from BoardDetailHeader)
 │       └── GifPicker
 │
 └── Footer
 ```
 
 `Header` and `Footer` are rendered once at the `App` level so they persist across routes.
+The **Create Board** action is global: the `Header` button navigates to `/?new=1`; `HomePage`
+detects that query param, opens `CreateBoardModal`, then strips the param (replace) so a refresh
+doesn't reopen it. This keeps "create" reachable from the board detail page too.
+
+> **Redesign note (dashboard polish pass):** the original `Banner` was replaced by `Hero`
+> (now carries live stat cards), and `QuickActions` + `HighlightedBoards` were added. `FilterBar`
+> no longer owns the create button. See **§7 Frontend Design System** for the styling system,
+> tokens, and shared UI primitives introduced in this pass.
 
 ### 1.2 Component specs
 
@@ -106,11 +119,13 @@ App (router, theme provider/state)
 - **Interactions:** toggles `theme`; applies `data-theme` / class to the root element; persists choice.
 
 #### `Header`
-- **Responsibility:** Sticky top bar with the app logo/name and the theme toggle.
-- **Renders:** logo icon + "Kudos Board" heading (left), `ThemeToggle` (right).
+- **Responsibility:** Sticky top navigation with the brand, a global **Create Board** button, and the theme toggle.
+- **Renders:** gradient logo mark + "Kudos Board" heading (left); `Create Board` primary button +
+  `ThemeToggle` (right). Translucent blurred backdrop; gains a border + subtle shadow once scrolled.
 - **Props:** `theme`, `onToggleTheme` — from `App`.
-- **State:** local `scrolled` boolean (for backdrop blur on scroll).
-- **Interactions:** none beyond delegating the toggle.
+- **State:** local `scrolled` boolean (for the backdrop border/shadow on scroll).
+- **Interactions:** `Create Board` → `navigate('/?new=1')` (HomePage opens the modal); delegates the theme toggle.
+- **Responsive:** below 560px the brand text and button label collapse to an icon-only button.
 
 #### `ThemeToggle`
 - **Responsibility:** Icon button that switches between light and dark mode.
@@ -119,20 +134,40 @@ App (router, theme provider/state)
 - **State:** none.
 - **Interactions:** `onClick` → `onToggle()`.
 
-#### `Banner`
-- **Responsibility:** Home-page hero with headline + subtitle on a gradient.
-- **Renders:** heading (`displayXl`) and subtitle (`bodyLg`), optional decorative confetti.
-- **Props:** `headline`, `subtitle` — static, from `HomePage`.
+#### `Hero` *(replaces `Banner`)*
+- **Responsibility:** Home dashboard hero — gradient backdrop, headline/subtitle, CTAs, and three
+  live **StatCards** (Total Boards, Total Cards, Recent Boards).
+- **Renders:** eyebrow chip, `displayXl` headline (with gradient-clipped accent word), `bodyLg`
+  subtitle, two CTAs ("Create a board" / "Browse boards" → `#all-boards`), and a 3-up stat grid
+  with category-tinted icon tiles. Soft blurred decorative blobs (purely decorative, `aria-hidden`).
+- **Props:** `stats` (`{ boards, cards, recent }`), `loading`, `onPrimary()` — from `HomePage`.
 - **State:** none.
-- **Interactions:** none.
+- **Interactions:** primary CTA → `onPrimary` (opens create modal); secondary CTA anchors to the grid.
+
+#### `QuickActions` *(new)*
+- **Responsibility:** Three entry-point cards under the hero.
+- **Renders:** "Create a board", "Browse inspiration", "View recent boards" — each an icon tile,
+  title, description, and arrow that nudges right on hover.
+- **Props:** `onCreate()`, `onBrowseInspiration()`, `onViewRecent()` — from `HomePage`.
+- **State:** none.
+- **Interactions:** create opens the modal; the other two set a filter (`inspiration` / `recent`),
+  clear search, and smooth-scroll to the All Boards section.
+
+#### `HighlightedBoards` *(new)*
+- **Responsibility:** Feature strip of the 2–3 most recent boards as larger `BoardCard`s.
+- **Renders:** a `section-head` + a grid of `BoardCard featured`. Renders `null` when there are no
+  boards (and HomePage hides it whenever a filter/search is active).
+- **Props:** `boards` (already sliced to ≤3), `onDeleteBoard(id)`.
+- **State:** none.
 
 #### `FilterBar`
-- **Responsibility:** Category filter pills + the "Create New Board" entry point.
-- **Renders:** a pill per filter value (`all`, `recent`, `celebration`, `thankyou`, `inspiration`)
-  and a "Create New Board" button.
-- **Props:** `activeFilter`, `onFilterChange(filter)`, `onCreateBoard()` — from `HomePage`.
+- **Responsibility:** Category filter pills (controlled). The create entry point moved to the
+  `Header` / section head, so this is now purely a filter group.
+- **Renders:** a pill per filter value (`all`, `recent`, `celebration`, `thankyou`, `inspiration`);
+  the active pill is filled with its category accent. Horizontally scrollable on small screens.
+- **Props:** `activeFilter`, `onFilterChange(filter)` — from `HomePage`.
 - **State:** none (controlled).
-- **Interactions:** clicking a pill → `onFilterChange`; clicking the button → `onCreateBoard` (opens modal).
+- **Interactions:** clicking a pill → `onFilterChange`.
 
 #### `SearchBar`
 - **Responsibility:** Title search with submit + clear.
@@ -151,11 +186,16 @@ App (router, theme provider/state)
 - **Interactions:** delegates card clicks / deletes upward.
 
 #### `BoardCard`
-- **Responsibility:** A single board tile on the home page.
-- **Renders:** cover image (16:9), category tag, title (`h4`), author line, delete icon button.
-- **Props:** `id`, `title`, `category`, `imageUrl`, `author`, `cardCount`, `onDelete(id)`, `onClick(id)`.
-- **State:** local `deleting` boolean (optimistic/disabled state during delete).
-- **Interactions:** card click → navigate to `/boards/:id`; delete button → `onDelete` (stop propagation).
+- **Responsibility:** A single board tile on the home page (also used in `HighlightedBoards`).
+- **Renders:** cover image (16:10, 16:9 when `featured`) with a gradient overlay; over the media a
+  category pill (top-left) and a card-count badge (top-right); a corner **delete** icon button that
+  fades in on hover/focus; below, the title (`h4`, `h3` when featured, clamped to 2 lines) and an
+  author row with a circular initial **avatar**. Hover lifts the card, deepens the shadow, glows the
+  border (primary), and zooms the image.
+- **Props:** `id`, `title`, `category`, `imageUrl`, `author`, `cardCount`, `onDelete(id)`, `featured?`.
+- **State:** local `deleting` boolean (dims + disables the card during the optimistic delete).
+- **Interactions:** card click / Enter / Space → navigate to `/boards/:id`; delete button →
+  `stopPropagation` then `onDelete` (never triggers navigation).
 
 #### `EmptyState`
 - **Responsibility:** Friendly placeholder when a grid has no items.
@@ -173,16 +213,20 @@ App (router, theme provider/state)
 
 #### `CreateBoardModal`
 - **Responsibility:** Form dialog to create a board.
-- **Renders:** overlay + card with fields — title (required), category (required, select among the
-  three stored categories), image URL (optional), author (optional) — plus Cancel / Create.
+- **Renders:** overlay + elevated card with fields — title (required), category (required, rendered
+  as a 3-up **pill/card selector** with emoji + label, not a plain `<select>`), image URL (optional),
+  author (optional) — plus Cancel / Create. Inline polished validation errors; the Create button
+  shows a spinner and "Creating…" while submitting.
 - **Props:** `open`, `onClose()`, `onCreate(boardData)` — from `HomePage`.
 - **State:** local form fields (`title`, `category`, `imageUrl`, `author`), `submitting`, `errors`.
-- **Interactions:** input changes; submit → validate → `onCreate`; cancel/overlay/Esc → `onClose`.
+- **Interactions:** input/category changes; submit → validate → `onCreate`; cancel/overlay/Esc → `onClose`.
 
 #### `BoardDetailHeader`
 - **Responsibility:** Header strip for a board's page.
-- **Renders:** back link, board title (`h1`), category chip, "Add Card" button, themed gradient.
-- **Props:** `board`, `onAddCard()` — from `BoardDetailPage`.
+- **Renders:** a pill-style back link, category chip, board title (`displayLg`), an author row with
+  avatar, a card-count badge, and the "Add Card" button (themed to the board's category). Background
+  is a soft category-tinted radial wash with a bottom border.
+- **Props:** `board`, `cardCount` (live count from `BoardDetailPage`), `onAddCard()`.
 - **State:** none.
 - **Interactions:** back link → navigate home; "Add Card" → `onAddCard` (opens modal).
 
@@ -211,18 +255,22 @@ App (router, theme provider/state)
 
 #### `CreateCardModal`
 - **Responsibility:** Form dialog to add a card to the current board.
-- **Renders:** overlay + card with message (required), `GifPicker` (required selection), author
-  (optional), Cancel / Create. Create button uses the board category's accent.
+- **Renders:** overlay + card with a large message textarea (required), `GifPicker` (required
+  selection), author (optional), Cancel / Create. Create button uses the board category's accent
+  gradient, shows a spinner while submitting, and is **disabled until both message and a GIF are
+  set** (in addition to server validation).
 - **Props:** `open`, `boardCategory`, `onClose()`, `onCreate(cardData)` — from `BoardDetailPage`.
 - **State:** local `message`, `gifUrl` (selected), `author`, `submitting`, `errors`.
 - **Interactions:** field changes; GIF select; submit → validate (message + gif required) → `onCreate`.
 
 #### `GifPicker`
 - **Responsibility:** Search GIPHY and select a GIF inside the Create Card modal.
-- **Renders:** search input + scrollable result grid; the selected GIF is highlighted.
+- **Renders:** search input (with an inline spinner while searching) + a fixed-height scrollable
+  3-col result grid. The selected GIF gets a primary ring + a checkmark badge. Distinct
+  **loading**, **empty** ("No GIFs found"), and **error** states fill the grid area.
 - **Props:** `onSelect(gifUrl)`, `selectedUrl`.
 - **State:** local `query`, `results`, `status` (`idle | searching | results | error`).
-- **Interactions:** typing/submitting query → call GIPHY (debounced); clicking a result → `onSelect`.
+- **Interactions:** typing → debounced GIPHY search; submit → immediate search; clicking a result → `onSelect`.
 
 #### `Footer`
 - **Responsibility:** Site footer with tagline + copyright.
@@ -464,12 +512,16 @@ model Card {
 
 | State           | Type                | Initial   | Owner | Trigger to update |
 | --------------- | ------------------- | --------- | ----- | ----------------- |
-| `boards`        | `Board[]`           | `[]`      | `HomePage` | Fetched on mount and after create/delete; refetched (or re-queried) when filter/search change. |
+| `boards`        | `Board[]`           | `[]`      | `HomePage` | Filtered/searched grid set. Fetched on mount and after create/delete; refetched when filter/search change. |
+| `allBoards`     | `Board[]`           | `[]`      | `HomePage` | Unfiltered snapshot powering hero **stats** (`{boards, cards, recent}`, derived via `useMemo`) and the **HighlightedBoards** strip (first 3). Kept in sync on create/delete. |
 | `loading`       | `boolean`           | `true`    | `HomePage` | True while a boards request is in flight. |
-| `error`         | `string \| null`    | `null`    | `HomePage` | Set when a request fails. |
-| `activeFilter`  | `FilterValue`       | `'all'`   | `HomePage` | `FilterBar` pill click. Drives the `filter` query param. |
-| `searchQuery`   | `string`            | `''`      | `HomePage` | `SearchBar` change/submit; clearing resets to all boards. |
-| `isCreateOpen`  | `boolean`           | `false`   | `HomePage` | `FilterBar` "Create New Board" opens; modal close/create closes. |
+| `error`         | `string \| null`    | `null`    | `HomePage` | Set when a request fails (grid surfaces it; stats are best-effort). |
+| `activeFilter`  | `FilterValue`       | `'all'`   | `HomePage` | `FilterBar` pill click / QuickActions jump. Drives the `filter` query param. |
+| `searchQuery`   | `string`            | `''`      | `HomePage` | `SearchBar` submit; clearing resets to all boards. |
+| `isCreateOpen`  | `boolean`           | `false`   | `HomePage` | Opened by Header (`?new=1`), Hero, QuickActions, section-head, or empty-state; modal close/create closes. |
+
+> **`?new=1` deep link:** `HomePage` reads `useSearchParams`; when `new=1` it opens the create modal
+> once and removes the param with `replace` so refresh/back doesn't reopen it.
 
 > Filtering + search may be (a) sent to the API as query params (`filter`, `search`) for
 > server-side filtering, or (b) applied client-side over the already-fetched `boards`. **Decision:
@@ -547,7 +599,123 @@ frontend re-applies the same sort after optimistic updates so the UI stays consi
 
 ### 6.3 Deployment (Render)
 - Backend web service + managed PostgreSQL; frontend static site. Env vars: `DATABASE_URL`,
-  `GIPHY_API_KEY`, `VITE_API_BASE_URL`. Run `prisma migrate deploy` on release.
+  `GIPHY_API_KEY`, `OPENROUTER_API_KEY`, `VITE_API_BASE_URL`. Run `prisma migrate deploy` on release.
+
+---
+
+## 7. Frontend Design System (dashboard polish pass)
+
+> This section documents the visual redesign that turned the starter UI into a polished
+> SaaS-style dashboard. It is additive — **no API contracts, DB fields, or response shapes changed**,
+> and every required feature still works. Style direction: modern SaaS, clean but playful, soft
+> shadows, rounded 16–24px cards, subtle gradients, a purple/blue primary accent, and per-category
+> color for personality — no clutter, no random gradients.
+
+### 7.1 Token layer (`styles/tokens.css`)
+
+The original Figma tokens are kept as the base. A **dashboard layer** was added on top so older and
+newer components share one source of truth:
+
+- **Semantic aliases (requested names):** `--bg`, `--text-primary`, `--text-secondary`,
+  `--celebration`, `--thank-you`, `--inspiration` map onto the existing base/category tokens.
+- **Primary accent:** `--primary`, `--primary-hover`, `--primary-soft`, `--primary-contrast`
+  (indigo→violet; brightens in dark mode for contrast).
+- **Layered surfaces:** `--bg` (deepest) → `--surface` → `--surface-elevated` (brightest panel,
+  used for modals) → `--surface-hover`. Dark mode is **layered charcoal, never pure black**
+  (`#0E0E13` / `#17171F` / `#20202B`).
+- **Shadow scale:** `--shadow-sm` / `--shadow-md` / `--shadow-lg` (+ legacy `--shadow-card*`,
+  `--shadow-primary`, `--shadow-pinned`). Shadows deepen in dark mode.
+- **Radii:** `--radius-md 12` / `--radius-lg 16` / `--radius-xl 20` / `--radius-2xl 24` / `--radius-full`.
+- **Gradients (used sparingly):** `--gradient-primary`, `--gradient-hero` (layered radial washes),
+  and per-category `--gradient-celebration|thankyou|inspiration`.
+- **Media overlay:** `--overlay-media` keeps titles/badges legible over GIFs and cover images.
+- **Motion:** `--transition-fast|base|slow` + `--ease-spring` for the modal pop.
+
+### 7.2 Shared UI primitives (`styles/global.css`)
+
+One reusable system so every surface uses consistent sizing, radius, focus, and motion:
+
+- **Buttons `.ui-btn`** + variants `--primary` (gradient + shadow), `--ghost`, `--outline`,
+  category accents `--cat-celebration|thankyou|inspiration`, plus `--sm` / `--block`. Fixed heights
+  (44 / 38px), `:hover` lift, `:active` press, `:disabled` dim, and a white `.spinner` on filled buttons.
+- **`.section-head`** (title + subtitle + optional trailing action), **`.avatar`** (gradient initial
+  chip), **`.count-badge`**, **`.spinner`**, and **`.stack`** (vertical section rhythm).
+- **Accessibility:** global `:focus-visible` ring uses `--primary`; all interactive controls are
+  real buttons/links; decorative elements are `aria-hidden`; `prefers-reduced-motion` is respected.
+
+### 7.3 Component styling notes
+
+- **Header** — sticky, translucent blur, gradient logo mark, global Create Board button.
+- **Hero** — `--gradient-hero` + blurred blobs, gradient-clipped accent word, 3 translucent StatCards.
+- **QuickActions / HighlightedBoards** — gradient icon tiles; featured cards reuse `BoardCard`.
+- **BoardCard / KudoCard** — overlay-on-media, category pill + count badge, avatar author row,
+  hover lift + image zoom + primary border glow; corner delete fades in on hover/focus and stops
+  propagation; `deleting` dims the card.
+- **Modals** — `--surface-elevated`, spring pop-in, sticky header, shared `.field`/`.cat-select`
+  form primitives; Create Board uses a pill category selector; GifPicker has loading/empty/error
+  states and a checkmark on the selected GIF.
+- **EmptyState** — soft dashed panel with a floating icon badge and a `--primary-soft` glow; used for
+  no-results, no-boards, and no-cards.
+
+### 7.4 Responsive system
+
+- **BoardGrid:** 1 (mobile) → 2 (≥640) → 3 (≥1024) → 4 (≥1280) columns. **CardGrid:** 1 → 2 → 3.
+  **QuickActions:** 3 → 1 (≤900). **Hero:** 2-col → stacked (≤1024); stats 3-up → 1-up (≤380).
+- Header never overflows (brand/label collapse ≤560px). The All Boards toolbar (filters + search)
+  stacks vertically ≤768px. Modals are width-capped, `max-height: 100dvh`, and scroll internally.
+
+### 7.5 Guarantees
+
+- Theme persists via `localStorage` (`kudos-theme`) across home and board pages (unchanged).
+- All required features intact: browse/filter/search boards, create/delete board, board detail,
+  create card (GIPHY), upvote, delete card, dark mode (+ the in-scope pin stretch).
+- `npm run build` passes.
+
+---
+
+## 8. AI Features (OpenRouter)
+
+> Differentiators that remove the "blank message box" problem. All AI calls go through the
+> **backend proxy** so the `OPENROUTER_API_KEY` stays server-side (same rationale as the GIPHY
+> proxy, §2.3). The boards/cards data layer is unchanged — these are additive endpoints, and the
+> frontend reaches them through the existing Vite `/api` → `localhost:3001` dev proxy.
+
+### 8.1 "Help me write" — AI kudos composer ✅ *implemented*
+- **Where:** inside `CreateCardModal`, an inline `KudosComposer` on the Message field's label row.
+- **Flow:** the user types a few keywords + picks a **tone** (`heartfelt`, `funny`, `professional`,
+  `poetic`, `hype`) → the drafted message populates the Message field, fully editable, regenerate-able.
+- **New component:** `KudosComposer` (`onResult(message)` lifts the draft into the modal's form state).
+- **New frontend client:** `lib/ai.js` → `composeKudos({ keywords, tone, recipient })`, `TONES`.
+- **New endpoint:** `POST /api/ai/compose`
+  | Field       | Type   | Required | Notes |
+  | ----------- | ------ | -------- | ----- |
+  | `keywords`  | string | **yes**  | Non-empty, ≤ 500 chars. |
+  | `tone`      | string | no       | One of the five tones above. Default `heartfelt`. |
+  | `recipient` | string | no       | Optional name the kudos is addressed to. |
+  - **Success `200`:** `{ "message": "…" }` (1–2 sentences, < 280 chars, no quotes/hashtags/emoji).
+  - **Errors:** `400` if `keywords` missing/too long or `tone` invalid; `500` if the key isn't
+    configured or OpenRouter fails.
+
+### 8.2 AI-suggested GIF 🚧 *teammate — stubbed*
+- **Plan:** feed the drafted `message` to the model, get 2–3 GIPHY search terms, run them through the
+  existing GIF search to surface on-vibe GIFs.
+- **New endpoint:** `POST /api/ai/suggest-gifs` → `{ "terms": string[] }`. Currently returns `501`
+  (`backend/src/controllers/aiController.js → suggestGifs`) as a placeholder for the teammate to fill.
+
+### 8.3 Backend shape
+```
+backend/
+├── .env                      ← OPENROUTER_API_KEY (gitignored; copy from .env.example)
+├── package.json              ← express, cors, dotenv
+└── src/
+    ├── index.js              ← Express app, CORS, /api/health, central error handler
+    ├── lib/openrouter.js     ← shared chat() helper — the ONLY place the LLM is called
+    ├── routes/ai.js          ← mounts /api/ai/compose + /api/ai/suggest-gifs
+    └── controllers/aiController.js
+```
+- **Model:** `OPENROUTER_MODEL` env var; defaults to `meta-llama/llama-3.3-70b-instruct:free`.
+- **Run:** `cd backend && npm install && npm run dev` (listens on `:3001`). `GET /api/health` →
+  `{ ok, ai }` reports whether the key is loaded.
 
 ---
 

@@ -115,7 +115,7 @@ export default function BoardDetailPage() {
 
   return (
     <>
-      <BoardDetailHeader board={board} onAddCard={() => setIsAddOpen(true)} />
+      <BoardDetailHeader board={board} cardCount={cards.length} onAddCard={() => setIsAddOpen(true)} />
       <div className="container board-detail">
         <CardGrid
           cards={cards}

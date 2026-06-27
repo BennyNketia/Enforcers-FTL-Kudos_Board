@@ -1,6 +1,12 @@
+import { useState } from 'react'
 import UpvoteButton from './UpvoteButton.jsx'
 import { PinIcon, TrashIcon } from './icons.jsx'
 import './KudoCard.css'
+
+function initialOf(name) {
+  const t = (name || '').trim()
+  return t ? t[0].toUpperCase() : '🙂'
+}
 
 // A single appreciation card: GIF, message, author, upvote / pin / delete.
 export default function KudoCard({
@@ -14,19 +20,30 @@ export default function KudoCard({
   onPin,
   onDelete,
 }) {
+  const [deleting, setDeleting] = useState(false)
+
+  function handleDelete() {
+    setDeleting(true)
+    onDelete?.(id)
+  }
+
   return (
-    <article className={`kudo-card${pinned ? ' kudo-card--pinned' : ''}`}>
+    <article className={`kudo-card${pinned ? ' kudo-card--pinned' : ''}${deleting ? ' kudo-card--deleting' : ''}`}>
       {pinned && <span className="kudo-card__pin-badge" aria-label="Pinned">📌</span>}
 
       {gifUrl && (
         <div className="kudo-card__media">
           <img src={gifUrl} alt="" loading="lazy" />
+          <span className="kudo-card__media-overlay" aria-hidden />
         </div>
       )}
 
       <div className="kudo-card__body">
         <p className="kudo-card__message t-body-md">{message}</p>
-        <p className="kudo-card__author t-body-sm">{author ? `— ${author}` : '— Anonymous'}</p>
+        <div className="kudo-card__author">
+          <span className="avatar kudo-card__avatar" aria-hidden>{initialOf(author)}</span>
+          <span className="t-body-sm">{author ? author : 'Anonymous'}</span>
+        </div>
       </div>
 
       <div className="kudo-card__footer">
@@ -42,7 +59,7 @@ export default function KudoCard({
           </button>
           <button
             className="kudo-card__icon-btn kudo-card__icon-btn--danger"
-            onClick={() => onDelete?.(id)}
+            onClick={handleDelete}
             aria-label="Delete card"
             title="Delete"
           >

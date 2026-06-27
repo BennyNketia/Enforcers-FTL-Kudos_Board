@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import Modal from './Modal.jsx'
 import GifPicker from './GifPicker.jsx'
+import KudosComposer from './KudosComposer.jsx'
 
 const EMPTY = { message: '', gifUrl: '', author: '' }
 
@@ -20,6 +21,12 @@ export default function CreateCardModal({ open, boardCategory, onClose, onCreate
 
   function set(field, value) {
     setForm((f) => ({ ...f, [field]: value }))
+  }
+
+  // The AI composer fills the message field; clear any stale message error.
+  function handleComposed(message) {
+    setForm((f) => ({ ...f, message }))
+    setErrors((e) => ({ ...e, message: undefined }))
   }
 
   function validate() {
@@ -49,15 +56,20 @@ export default function CreateCardModal({ open, boardCategory, onClose, onCreate
   }
 
   // Create button accent follows the board's category.
-  const accentClass = boardCategory ? `btn--cat-${boardCategory}` : ''
+  const accentClass = boardCategory ? `ui-btn--cat-${boardCategory}` : ''
+  // Submit only enables once both required fields are satisfied.
+  const canSubmit = form.message.trim() !== '' && form.gifUrl !== '' && !submitting
 
   return (
-    <Modal open={open} title="Add a Kudos Card" onClose={onClose} maxWidth="34rem">
+    <Modal open={open} title="Add a Kudos Card" onClose={onClose} maxWidth="36rem">
       <form onSubmit={handleSubmit} noValidate>
         <div className="field">
-          <label className="field__label" htmlFor="card-message">
-            Message<span className="req">*</span>
-          </label>
+          <div className="field__label-row">
+            <label className="field__label" htmlFor="card-message">
+              Message<span className="req">*</span>
+            </label>
+            <KudosComposer onResult={handleComposed} />
+          </div>
           <textarea
             id="card-message"
             className={`field__textarea${errors.message ? ' field__textarea--error' : ''}`}
@@ -91,10 +103,11 @@ export default function CreateCardModal({ open, boardCategory, onClose, onCreate
         {errors.form && <p className="field__error" style={{ marginBottom: 'var(--space-3)' }}>{errors.form}</p>}
 
         <div className="modal-actions">
-          <button type="submit" className={`btn btn--primary ${accentClass}`} disabled={submitting}>
+          <button type="submit" className={`ui-btn ui-btn--primary ${accentClass}`} disabled={!canSubmit}>
+            {submitting && <span className="spinner" aria-hidden />}
             {submitting ? 'Adding…' : 'Add Card'}
           </button>
-          <button type="button" className="btn btn--ghost" onClick={onClose} disabled={submitting}>
+          <button type="button" className="ui-btn ui-btn--ghost" onClick={onClose} disabled={submitting}>
             Cancel
           </button>
         </div>

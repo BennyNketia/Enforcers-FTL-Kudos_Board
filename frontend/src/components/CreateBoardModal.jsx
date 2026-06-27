@@ -69,22 +69,27 @@ export default function CreateBoardModal({ open, onClose, onCreate }) {
         </div>
 
         <div className="field">
-          <label className="field__label" htmlFor="board-category">
+          <label className="field__label" id="board-category-label">
             Category<span className="req">*</span>
           </label>
-          <select
-            id="board-category"
-            className={`field__select${errors.category ? ' field__input--error' : ''}`}
-            value={form.category}
-            onChange={(e) => set('category', e.target.value)}
-          >
-            <option value="" disabled>Choose a category…</option>
-            {BOARD_CATEGORIES.map((c) => (
-              <option key={c.key} value={c.key}>
-                {c.emoji} {c.label}
-              </option>
-            ))}
-          </select>
+          <div className="cat-select" role="radiogroup" aria-labelledby="board-category-label">
+            {BOARD_CATEGORIES.map((c) => {
+              const active = form.category === c.key
+              return (
+                <button
+                  type="button"
+                  key={c.key}
+                  role="radio"
+                  aria-checked={active}
+                  className={`cat-option cat-option--${c.key}${active ? ' cat-option--active' : ''}`}
+                  onClick={() => set('category', c.key)}
+                >
+                  <span className="cat-option__emoji" aria-hidden>{c.emoji}</span>
+                  <span className="cat-option__label">{c.label}</span>
+                </button>
+              )
+            })}
+          </div>
           {errors.category && <span className="field__error">{errors.category}</span>}
         </div>
 
@@ -113,10 +118,11 @@ export default function CreateBoardModal({ open, onClose, onCreate }) {
         {errors.form && <p className="field__error" style={{ marginBottom: 'var(--space-3)' }}>{errors.form}</p>}
 
         <div className="modal-actions">
-          <button type="submit" className="btn btn--primary" disabled={submitting}>
+          <button type="submit" className="ui-btn ui-btn--primary" disabled={submitting}>
+            {submitting && <span className="spinner" aria-hidden />}
             {submitting ? 'Creating…' : 'Create Board'}
           </button>
-          <button type="button" className="btn btn--ghost" onClick={onClose} disabled={submitting}>
+          <button type="button" className="ui-btn ui-btn--ghost" onClick={onClose} disabled={submitting}>
             Cancel
           </button>
         </div>

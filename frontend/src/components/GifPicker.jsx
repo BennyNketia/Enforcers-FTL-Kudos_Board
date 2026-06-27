@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { searchGifs } from '../lib/giphy.js'
-import { SearchIcon } from './icons.jsx'
+import { SearchIcon, CheckIcon, ImageIcon } from './icons.jsx'
 import './GifPicker.css'
 
-// Search GIPHY and select a GIF. Highlights the chosen one.
+// Search GIPHY and select a GIF. Shows loading / empty / error states and marks
+// the chosen GIF with a checkmark overlay.
 export default function GifPicker({ onSelect, selectedUrl }) {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState([])
@@ -41,6 +42,8 @@ export default function GifPicker({ onSelect, selectedUrl }) {
     runSearch(query)
   }
 
+  const showEmpty = status === 'results' && results.length === 0
+
   return (
     <div className="gif-picker">
       <form className="gif-picker__search" onSubmit={handleSubmit}>
@@ -53,13 +56,27 @@ export default function GifPicker({ onSelect, selectedUrl }) {
           placeholder="Search GIPHY…"
           aria-label="Search GIFs"
         />
+        {status === 'searching' && <span className="spinner gif-picker__spinner" aria-label="Searching" />}
       </form>
 
-      <div className="gif-picker__grid">
-        {status === 'searching' && <p className="gif-picker__status t-body-sm">Searching…</p>}
-        {status === 'error' && <p className="gif-picker__status t-body-sm">Couldn’t load GIFs. Try again.</p>}
-        {status === 'results' && results.length === 0 && (
-          <p className="gif-picker__status t-body-sm">No GIFs found.</p>
+      <div className="gif-picker__grid" role="listbox" aria-label="GIF results">
+        {status === 'error' && (
+          <div className="gif-picker__status">
+            <span className="gif-picker__status-icon" aria-hidden>😕</span>
+            <p className="t-body-sm">Couldn’t load GIFs. Try again.</p>
+          </div>
+        )}
+        {showEmpty && (
+          <div className="gif-picker__status">
+            <span className="gif-picker__status-icon" aria-hidden><ImageIcon width="28" height="28" /></span>
+            <p className="t-body-sm">No GIFs found. Try another search.</p>
+          </div>
+        )}
+        {status === 'searching' && results.length === 0 && (
+          <div className="gif-picker__status">
+            <span className="spinner" aria-hidden />
+            <p className="t-body-sm">Searching GIPHY…</p>
+          </div>
         )}
         {results.map((g) => {
           const selected = selectedUrl === g.url
@@ -67,11 +84,17 @@ export default function GifPicker({ onSelect, selectedUrl }) {
             <button
               type="button"
               key={g.id}
+              role="option"
+              aria-selected={selected}
               className={`gif-picker__item${selected ? ' gif-picker__item--selected' : ''}`}
               onClick={() => onSelect(g.url)}
-              aria-pressed={selected}
             >
               <img src={g.previewUrl} alt="" loading="lazy" />
+              {selected && (
+                <span className="gif-picker__check" aria-hidden>
+                  <CheckIcon width="16" height="16" />
+                </span>
+              )}
             </button>
           )
         })}

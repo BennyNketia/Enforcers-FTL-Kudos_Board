@@ -1,11 +1,15 @@
 .home {
-  padding-top: var(--space-8);
-  padding-bottom: var(--space-16);
+  padding-top: var(--space-12);
+  padding-bottom: var(--space-20);
 }
 
-.home__controls {
+.home__all {
+  scroll-margin-top: 84px; /* clears the sticky header on anchor jumps */
+}
+
+.home__toolbar {
   display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: var(--space-4);
   margin-bottom: var(--space-8);
 }
@@ -16,4 +20,15 @@
   padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-md);
   margin-bottom: var(--space-4);
+}
+
+@media (max-width: 768px) {
+  .home__toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-3);
+  }
+  .home__new {
+    display: none; /* create is already in the header on small screens */
+  }
 }

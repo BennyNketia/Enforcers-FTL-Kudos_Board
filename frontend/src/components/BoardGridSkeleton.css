@@ -3,12 +3,13 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-xl);
   overflow: hidden;
+  box-shadow: var(--shadow-sm);
   animation: shimmer 1.5s ease-in-out infinite;
 }
 
 .skeleton-card__media {
-  aspect-ratio: 16 / 9;
-  background-color: var(--surface-hover);
+  aspect-ratio: 16 / 10;
+  background: linear-gradient(110deg, var(--surface-hover) 30%, var(--border) 50%, var(--surface-hover) 70%);
 }
 
 .skeleton-card__body {
@@ -24,5 +25,5 @@
   background-color: var(--surface-hover);
 }
 .skeleton-line--tag { width: 30%; height: 12px; }
-.skeleton-line--title { width: 80%; }
+.skeleton-line--title { width: 85%; }
 .skeleton-line--author { width: 45%; height: 12px; }

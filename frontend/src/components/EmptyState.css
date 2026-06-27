@@ -5,19 +5,31 @@
   align-items: center;
   text-align: center;
   gap: var(--space-3);
-  padding: var(--space-20) var(--space-6);
-  color: var(--muted-text);
-  border: 2px dashed var(--border);
+  padding: var(--space-16) var(--space-6);
+  color: var(--text-secondary);
+  background:
+    radial-gradient(80% 120% at 50% -10%, var(--primary-soft) 0%, transparent 60%),
+    var(--surface);
+  border: 1.5px dashed var(--border);
   border-radius: var(--radius-2xl);
 }
 
 .empty-state__emoji {
-  font-size: 64px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 84px;
+  height: 84px;
+  margin-bottom: var(--space-2);
+  font-size: 40px;
   line-height: 1;
+  border-radius: var(--radius-full);
+  background-color: var(--surface-elevated);
+  box-shadow: var(--shadow-md);
 }
 
 .empty-state__title {
-  color: var(--foreground);
+  color: var(--text-primary);
 }
 
 .empty-state__message {
@@ -25,15 +37,5 @@
 }
 
 .empty-state__action {
-  margin-top: var(--space-2);
-  padding: var(--space-2) var(--space-5);
-  border-radius: var(--radius-full);
-  font-weight: 600;
-  color: #fff;
-  background-color: var(--all-accent);
-  box-shadow: var(--shadow-button);
-  transition: background-color var(--transition-base);
-}
-.empty-state__action:hover {
-  background-color: var(--all-accent-dark);
+  margin-top: var(--space-3);
 }
