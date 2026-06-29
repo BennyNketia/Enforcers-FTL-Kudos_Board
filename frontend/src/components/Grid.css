@@ -1,0 +1,30 @@
+/* Shared responsive grid utilities for boards and cards. */
+.grid {
+  display: grid;
+  gap: var(--space-6);
+}
+
+/* Boards: 1 → 2 → 3 → 4 columns */
+.grid--boards {
+  grid-template-columns: 1fr;
+}
+@media (min-width: 640px) {
+  .grid--boards { grid-template-columns: repeat(2, 1fr); }
+}
+@media (min-width: 1024px) {
+  .grid--boards { grid-template-columns: repeat(3, 1fr); }
+}
+@media (min-width: 1280px) {
+  .grid--boards { grid-template-columns: repeat(4, 1fr); }
+}
+
+/* Cards: 1 → 2 → 3 columns */
+.grid--cards {
+  grid-template-columns: 1fr;
+}
+@media (min-width: 640px) {
+  .grid--cards { grid-template-columns: repeat(2, 1fr); }
+}
+@media (min-width: 1024px) {
+  .grid--cards { grid-template-columns: repeat(3, 1fr); }
+}

@@ -1,0 +1,155 @@
+.board-header {
+  position: relative;
+  padding: var(--space-6) 0 var(--space-10);
+  border-bottom: 1px solid var(--border);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* Category-themed gradient wash behind the header (no-cover fallback). */
+.board-header--celebration {
+  background:
+    radial-gradient(110% 120% at 0% 0%, var(--celebration-accent-soft) 0%, transparent 60%),
+    var(--background);
+}
+.board-header--thankyou {
+  background:
+    radial-gradient(110% 120% at 0% 0%, var(--thankyou-accent-soft) 0%, transparent 60%),
+    var(--background);
+}
+.board-header--inspiration {
+  background:
+    radial-gradient(110% 120% at 0% 0%, var(--inspiration-accent-soft) 0%, transparent 60%),
+    var(--background);
+}
+
+/* --- Cover banner --- */
+.board-header--has-cover {
+  min-height: 320px;
+  display: flex;
+  align-items: stretch;
+  border-bottom: none;
+}
+.board-header__cover {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+}
+.board-header__cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.board-header__scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to top, rgba(12, 10, 24, 0.92) 0%, rgba(12, 10, 24, 0.55) 45%, rgba(12, 10, 24, 0.35) 100%),
+    linear-gradient(to right, rgba(12, 10, 24, 0.45), transparent 60%);
+}
+.board-header--has-cover .board-header__inner {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 100%;
+}
+/* Push title block to the bottom of the cover for a poster-style layout. */
+.board-header--has-cover .board-header__row {
+  margin-top: auto;
+}
+
+.board-header__inner {
+  position: relative;
+}
+
+.board-header__back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text-secondary);
+  margin-bottom: var(--space-6);
+  padding: 6px 12px 6px 8px;
+  border-radius: var(--radius-full);
+  background-color: var(--surface-translucent);
+  border: 1px solid var(--border);
+  transition: color var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
+}
+.board-header__back:hover {
+  color: var(--text-primary);
+  border-color: color-mix(in srgb, var(--primary) 40%, var(--border));
+  transform: translateX(-2px);
+}
+
+.board-header__row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-5);
+  flex-wrap: wrap;
+}
+
+.board-header__titles {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.board-header__title {
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.board-header__meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+.board-header__author {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+.board-header__avatar {
+  width: 26px;
+  height: 26px;
+}
+
+/* Themed Add button per category (overrides the gradient primary). */
+.board-header__add { flex: 0 0 auto; }
+.board-header--celebration .board-header__add { background-image: var(--gradient-celebration); }
+.board-header--thankyou .board-header__add { background-image: var(--gradient-thankyou); }
+.board-header--inspiration .board-header__add { background-image: var(--gradient-inspiration); }
+
+/* --- White text + glassy chips when over a cover image --- */
+.board-header--has-cover .board-header__title { color: #fff; }
+.board-header--has-cover .board-header__author { color: rgba(255, 255, 255, 0.88); }
+.board-header--has-cover .board-header__back {
+  color: rgba(255, 255, 255, 0.92);
+  background-color: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.28);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.board-header--has-cover .board-header__back:hover {
+  background-color: rgba(255, 255, 255, 0.26);
+  color: #fff;
+}
+.board-header--has-cover .board-header__count {
+  color: #fff;
+  background-color: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+@media (max-width: 640px) {
+  .board-header__title { font-size: 1.875rem; }
+  .board-header__row { align-items: stretch; }
+  .board-header__add { justify-content: center; width: 100%; }
+  .board-header--has-cover { min-height: 280px; }
+}

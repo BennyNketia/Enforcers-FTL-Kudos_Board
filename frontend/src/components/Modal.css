@@ -1,0 +1,218 @@
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  background-color: rgba(10, 8, 22, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: fade-slide-up var(--transition-base) both;
+}
+
+.modal-card {
+  width: 100%;
+  max-height: calc(100dvh - var(--space-8));
+  overflow-y: auto;
+  background-color: var(--surface-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-lg);
+  animation: modal-pop var(--transition-base) var(--ease-spring) both;
+}
+
+@keyframes modal-pop {
+  from { opacity: 0; transform: translateY(16px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.modal-card__header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background-color: var(--surface-elevated);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-6) var(--space-6) var(--space-4);
+  border-bottom: 1px solid var(--border);
+}
+.modal-card__header h2 {
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+.modal-card__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-full);
+  color: var(--muted-text);
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+.modal-card__close:hover {
+  background-color: var(--surface-hover);
+  color: var(--text-primary);
+}
+
+.modal-card__body {
+  padding: var(--space-5) var(--space-6) var(--space-6);
+}
+
+/* --- Shared form primitives used by both create modals --- */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
+}
+
+.field__label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+/* Label on the left, an inline action (e.g. AI "Help me write") on the right. */
+.field__label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+.field__label .req {
+  color: var(--celebration-accent);
+  margin-left: 2px;
+}
+.field__hint {
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+
+.field__input,
+.field__select,
+.field__textarea {
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  background-color: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: 0.9375rem;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast),
+    background-color var(--transition-fast);
+}
+.field__input::placeholder,
+.field__textarea::placeholder {
+  color: var(--muted-text);
+}
+.field__textarea {
+  resize: vertical;
+  min-height: 120px;
+  line-height: 1.5;
+}
+.field__input:focus,
+.field__select:focus,
+.field__textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  background-color: var(--surface);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 22%, transparent);
+}
+.field__input--error,
+.field__textarea--error {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 22%, transparent);
+}
+
+.field__error {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--danger);
+}
+.field__error::before {
+  content: '⚠';
+  font-size: 0.75rem;
+}
+
+/* --- Category pill selector (Create Board) --- */
+.cat-select {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2);
+}
+.cat-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: var(--space-4) var(--space-2);
+  border-radius: var(--radius-lg);
+  background-color: var(--surface);
+  border: 1.5px solid var(--border);
+  color: var(--text-secondary);
+  transition: border-color var(--transition-fast), background-color var(--transition-fast),
+    transform var(--transition-fast), color var(--transition-fast);
+}
+.cat-option:hover {
+  transform: translateY(-2px);
+  color: var(--text-primary);
+}
+.cat-option__emoji { font-size: 1.4rem; line-height: 1; }
+.cat-option__label { font-size: 0.8125rem; font-weight: 600; }
+
+.cat-option--celebration:hover { border-color: var(--celebration-accent); }
+.cat-option--thankyou:hover { border-color: var(--thankyou-accent); }
+.cat-option--inspiration:hover { border-color: var(--inspiration-accent); }
+
+.cat-option--active { color: var(--text-primary); }
+.cat-option--active.cat-option--celebration { border-color: var(--celebration-accent); background-color: var(--celebration-accent-soft); }
+.cat-option--active.cat-option--thankyou { border-color: var(--thankyou-accent); background-color: var(--thankyou-accent-soft); }
+.cat-option--active.cat-option--inspiration { border-color: var(--inspiration-accent); background-color: var(--inspiration-accent-soft); }
+
+.modal-actions {
+  display: flex;
+  flex-direction: row-reverse;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+}
+
+/* --- Legacy .btn aliases kept so any leftover markup still styles correctly.
+   New modal markup uses the shared .ui-btn system in global.css. --- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  height: 44px;
+  padding: 0 var(--space-5);
+  border-radius: var(--radius-full);
+  font-weight: 600;
+  font-size: 0.875rem;
+  transition: background-color var(--transition-base), filter var(--transition-base),
+    transform var(--transition-fast), opacity var(--transition-base);
+}
+.btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.btn--primary {
+  color: var(--primary-contrast);
+  background-image: var(--gradient-primary);
+  box-shadow: var(--shadow-primary);
+}
+.btn--primary:hover:not(:disabled) { filter: brightness(1.06); transform: translateY(-1px); }
+.btn--cat-celebration { background-image: var(--gradient-celebration); }
+.btn--cat-thankyou { background-image: var(--gradient-thankyou); }
+.btn--cat-inspiration { background-image: var(--gradient-inspiration); }
+.btn--ghost {
+  color: var(--text-primary);
+  background-color: var(--surface-hover);
+  background-image: none;
+}
+.btn--ghost:hover:not(:disabled) { background-color: var(--border); }

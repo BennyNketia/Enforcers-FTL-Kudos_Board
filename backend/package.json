@@ -1,0 +1,16 @@
+{
+  "name": "kudos-board-backend",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Express proxy for the Kudos Board. Currently serves the AI endpoints (OpenRouter) and is the home for the GIPHY proxy + boards/cards CRUD (planning.md §2).",
+  "scripts": {
+    "dev": "node --watch src/index.js",
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2"
+  }
+}

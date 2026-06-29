@@ -1,0 +1,53 @@
+// ============================================================================
+// Express app entry point.
+//
+// Scope today: the AI proxy (/api/ai) that keeps the OpenRouter key server-side.
+// The boards/cards CRUD and GIPHY proxy from planning.md §2 will mount here too
+// when the rest of the backend is built; the frontend already speaks to /api.
+// ============================================================================
+
+import 'dotenv/config'
+import express from 'express'
+import cors from 'cors'
+
+import aiRouter from './routes/ai.js'
+import { isConfigured, OpenRouterNotConfiguredError } from './lib/openrouter.js'
+
+const app = express()
+const PORT = process.env.PORT || 3001
+
+// --- Middleware -------------------------------------------------------------
+const corsOrigin = process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN.split(',').map((s) => s.trim())
+  : true // dev default: reflect request origin
+app.use(cors({ origin: corsOrigin }))
+app.use(express.json({ limit: '64kb' }))
+
+// --- Health check -----------------------------------------------------------
+// Handy for confirming the server is up and whether AI is wired in.
+app.get('/api/health', (_req, res) => {
+  res.json({ ok: true, ai: isConfigured() })
+})
+
+// --- Routes -----------------------------------------------------------------
+app.use('/api/ai', aiRouter)
+
+// --- 404 for unknown /api paths ---------------------------------------------
+app.use('/api', (_req, res) => {
+  res.status(404).json({ error: 'Not found' })
+})
+
+// --- Central error handler --------------------------------------------------
+// eslint-disable-next-line no-unused-vars
+app.use((err, _req, res, _next) => {
+  if (err instanceof OpenRouterNotConfiguredError) {
+    return res.status(500).json({ error: err.message })
+  }
+  console.error('[error]', err)
+  res.status(500).json({ error: 'Something went wrong on the server.' })
+})
+
+app.listen(PORT, () => {
+  console.log(`Kudos backend listening on http://localhost:${PORT}`)
+  console.log(`  AI (OpenRouter): ${isConfigured() ? 'configured ✓' : 'NOT configured — add OPENROUTER_API_KEY to backend/.env'}`)
+})

@@ -1,0 +1,34 @@
+.home {
+  padding-top: var(--space-12);
+  padding-bottom: var(--space-20);
+}
+
+.home__all {
+  scroll-margin-top: 84px; /* clears the sticky header on anchor jumps */
+}
+
+.home__toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-8);
+}
+
+.home__error {
+  color: var(--danger);
+  background-color: var(--danger-soft);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-4);
+}
+
+@media (max-width: 768px) {
+  .home__toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-3);
+  }
+  .home__new {
+    display: none; /* create is already in the header on small screens */
+  }
+}

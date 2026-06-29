@@ -1,0 +1,16 @@
+.highlighted__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-6);
+}
+
+@media (max-width: 1023px) {
+  .highlighted__grid { grid-template-columns: repeat(2, 1fr); }
+  /* On 2-up, a stray third card stretches full width to avoid a lonely gap. */
+  .highlighted__grid > :nth-child(3):last-child { grid-column: 1 / -1; }
+}
+
+@media (max-width: 640px) {
+  .highlighted__grid { grid-template-columns: 1fr; }
+  .highlighted__grid > :nth-child(3):last-child { grid-column: auto; }
+}
