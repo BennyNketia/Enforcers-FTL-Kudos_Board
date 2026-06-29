@@ -685,7 +685,7 @@ One reusable system so every surface uses consistent sizing, radius, focus, and 
 > Differentiators that remove the "blank message box" problem. All AI calls go through the
 > **backend proxy** so the `OPENROUTER_API_KEY` stays server-side (same rationale as the GIPHY
 > proxy, §2.3). The boards/cards data layer is unchanged — these are additive endpoints, and the
-> frontend reaches them through the existing Vite `/api` → `localhost:3001` dev proxy.
+> frontend reaches them through the existing Vite `/api` → `localhost:3000` dev proxy.
 
 ### 8.1 "Help me write" — AI kudos composer ✅ *implemented*
 - **Where:** inside `CreateCardModal`, an inline `KudosComposer` on the Message field's label row.
@@ -721,7 +721,7 @@ backend/
     └── controllers/aiController.js
 ```
 - **Model:** `OPENROUTER_MODEL` env var; defaults to `meta-llama/llama-3.3-70b-instruct:free`.
-- **Run:** `cd backend && npm install && npm run dev` (listens on `:3001`). `GET /api/health` →
+- **Run:** `cd backend && npm install && npm run dev` (listens on `:3000`). `GET /api/health` →
   `{ ok, ai }` reports whether the key is loaded.
 
 ---
