@@ -1,7 +1,7 @@
 // ============================================================================
 // One-off seed script.
 //
-// Walks data.js (repo root) and POSTs every seed board + card into the running
+// Walks frontend/src/lib/seed.js and POSTs every seed board + card into the running
 // backend via the public API — same routes the frontend uses (planning.md §2).
 //
 //   1. POST /api/boards            → for each seedBoard, capture the new UUID
@@ -16,7 +16,7 @@
 // first if needed:  npx prisma migrate reset  --or--  DELETE manually.
 // ============================================================================
 
-import { seedBoards, seedCards } from '../../data.js'
+import { seedBoards, seedCards } from '../../frontend/src/lib/seed.js'
 
 const BASE = process.env.API_BASE || `http://localhost:${process.env.PORT || 3000}/api`
 

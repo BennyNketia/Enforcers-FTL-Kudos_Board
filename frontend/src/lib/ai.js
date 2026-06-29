@@ -34,3 +34,23 @@ export async function composeKudos({ keywords, tone = 'heartfelt', recipient = '
   }
   return data.message
 }
+
+/**
+ * Suggest 2–3 GIPHY search terms that match a kudos message's vibe.
+ * The caller feeds these into the existing GIPHY search (lib/giphy.js).
+ * @param {string} message the drafted kudos message
+ * @returns {Promise<string[]>} short search terms
+ */
+export async function suggestGifTerms(message) {
+  const res = await fetch(`${API_BASE}/ai/suggest-gifs`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message }),
+  })
+
+  const data = await res.json().catch(() => null)
+  if (!res.ok) {
+    throw new Error(data?.error || 'Couldn’t suggest GIFs. Try again.')
+  }
+  return data.terms ?? []
+}
