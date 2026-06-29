@@ -749,6 +749,38 @@ Implemented as CSS custom properties with a light set on `:root` and a dark set 
 
 ---
 
+## Spec Reconciliation — Backend (Milestone 2)
+
+Audit of `backend/src/` against the API contract in §2 and the schema spec in §3,
+performed after the boards/cards routes landed (commit adding Prisma + CRUD).
+
+### Endpoints verified
+- `GET /api/boards` — ✅ matches spec. `filter` validated (`all | recent | celebration | thankyou | inspiration`), bad values 400 with `{ error, details }`; `search` is case-insensitive substring on `title`; `recent` takes the 6 most recent; default ordering is `createdAt` desc. Implementation: `boardsController.listBoards` + `validateListBoardsQuery`.
+- `GET /api/boards/:boardId` — ✅ matches spec. 200 with single board + `cardCount`, 404 if missing.
+- `POST /api/boards` — ✅ matches spec. Returns 201 with the created board (`cardCount: 0`). Validation: `title` required + non-empty after trim, `category` required + ∈ enum, `imageUrl`/`author` typed string when present. 400 carries `{ error, details: { field } }`. Default cover image applied per category when `imageUrl` is omitted.
+- `DELETE /api/boards/:boardId` — ✅ matches spec. 204 on success, 404 (mapped from Prisma `P2025`) on missing. Cards cascade via `onDelete: Cascade` in the schema.
+- `GET /api/boards/:boardId/cards` — ✅ matches spec. Returns cards pre-sorted by `pinned DESC, pinnedAt DESC NULLS LAST, createdAt DESC` (§2.2 + §5 invariant). 404 if the board is missing.
+- `POST /api/boards/:boardId/cards` — ✅ matches spec. 201 with created card (`upvotes: 0, pinned: false, pinnedAt: null`). 404 if the board is missing; 400 with `details` if `message`/`gifUrl` are missing/empty.
+- `DELETE /api/boards/:boardId/cards/:cardId` — ✅ matches spec. 204 on success, 404 if the card doesn't belong to that board (uses `deleteMany` scoped by both ids so cross-board deletes correctly miss).
+- `PATCH /api/boards/:boardId/cards/:cardId/upvote` — ✅ matches spec. Atomic `{ increment: 1 }`; 200 with the updated card; 404 if card/boardId pair not found.
+- `PATCH /api/boards/:boardId/cards/:cardId/pin` — ✅ matches spec. Body `{ pinned: boolean }` validated; stamps `pinnedAt = now()` when `true`, clears to `null` when `false`. 400 if `pinned` is not a boolean, 404 if not found.
+
+### Schema verified against spec
+- **`Board` model fields** match planning.md §3.1: ✅ `id (uuid)`, `title`, `category (Category enum)`, `imageUrl?`, `author?`, `createdAt (now())`, `cards Card[]`. `cardCount` correctly derived via Prisma `_count`, not stored.
+- **`Card` model fields** match planning.md §3.2: ✅ `id (uuid)`, `boardId`, `board` relation, `message`, `gifUrl`, `author?`, `upvotes (Int @default(0))`, `pinned (Boolean @default(false))`, `pinnedAt (DateTime?)`, `createdAt (now())`.
+- **Relationship `Board` → `Card`s** correct: ✅ one-to-many with `onDelete: Cascade`; `@@index([boardId])` present for per-board lookups.
+- **`Category` enum**: ✅ `celebration | thankyou | inspiration`. View-only filters `all`/`recent` not in the enum (correct — they're never stored).
+
+### Gaps found and resolved
+- **None functional.** Every required field, status code, ordering rule, and validation case in §2 is implemented.
+- **Wire-format note (optional fields):** the backend serializes missing `author` / `imageUrl` as JSON `null`. The frontend's localStorage fallback (`lib/api.js`) writes empty strings (`''`) for the same fields. Both are valid against the `string | undefined | null` shape in Appendix B, and `KudoCard` / `BoardCard` falsy-check before rendering. Documented as an intentional source-of-truth: **the backend uses `null` for absent optional fields** (Prisma-native); the spec is updated below.
+
+### Intentional spec updates made during backend implementation
+- **Prisma generator output path removed.** `prisma init` scaffolded `generator client { output = "../src/generated/prisma" }`, which forced a non-standard import. Reverted to the default so `@prisma/client` resolves conventionally — no spec impact, but worth noting for teammates running `prisma generate`.
+- **Optional fields serialize as `null`, not omitted/empty string.** Updated Appendix B types to `string | null` (was `string | undefined`) for `imageUrl`, `author` on `Board` and `author` on `Card`. Reason: Prisma returns `null` for nullable columns and the existing `pinnedAt: number | null` already established this convention.
+
+---
+
 ## Appendix B — Type reference
 
 ```ts
@@ -759,10 +791,10 @@ interface Board {
   id: string;
   title: string;
   category: Category;
-  imageUrl?: string;
-  author?: string;
-  createdAt: number;     // epoch ms
-  cardCount: number;     // derived
+  imageUrl: string | null;   // backend returns null when unset
+  author: string | null;
+  createdAt: number;         // epoch ms
+  cardCount: number;         // derived
 }
 
 interface Card {
@@ -770,10 +802,10 @@ interface Card {
   boardId: string;
   message: string;
   gifUrl: string;
-  author?: string;
+  author: string | null;
   upvotes: number;
   pinned: boolean;
   pinnedAt: number | null;
-  createdAt: number;     // epoch ms
+  createdAt: number;         // epoch ms
 }
 ```
