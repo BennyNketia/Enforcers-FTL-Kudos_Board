@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import ThemeToggle from './ThemeToggle.jsx'
+import AuthMenu from './AuthMenu.jsx'
 import { LogoIcon, PlusIcon } from './icons.jsx'
 import './Header.css'
 
-// Sticky top navigation: brand (left), Create Board + theme toggle (right).
+// Sticky top navigation: brand (left), Create Board + theme toggle + auth (right).
 // "Create Board" routes home with ?new=1 so HomePage opens the create modal —
 // this keeps the action reachable from the board detail page too.
-export default function Header({ theme, onToggleTheme }) {
+export default function Header({ theme, onToggleTheme, user, onRequestAuth, onLogout }) {
   const [scrolled, setScrolled] = useState(false)
   const navigate = useNavigate()
 
@@ -37,6 +38,7 @@ export default function Header({ theme, onToggleTheme }) {
             <span className="header__create-label">Create Board</span>
           </button>
           <ThemeToggle theme={theme} onToggle={onToggleTheme} />
+          <AuthMenu user={user} onRequestAuth={onRequestAuth} onLogout={onLogout} />
         </div>
       </div>
     </header>

@@ -49,7 +49,8 @@ Enforcers-FTL-Kudos_Board/
   (with GIPHY GIF), upvote card, delete card.
 - **In-scope stretch (present in the design system):** **Dark Mode** (theme toggle + token sets)
   and **Pinned Cards** (pin/unpin, pinned cards float to the top).
-- **Deferred stretch (specced in §6, not built yet):** User Accounts, Comments, Render deployment.
+- **Deferred stretch (specced in §6):** User Accounts (login/logout **frontend built** — see §6.1;
+  backend endpoints pending), Comments, Render deployment.
 
 ### A note on persistence
 
@@ -587,8 +588,14 @@ frontend re-applies the same sort after optimistic updates so the UI stays consi
   `GET /api/auth/me`. Auth via session cookie or JWT.
 - **New filter:** `filter=mine` on `GET /api/boards` → only the current user's boards.
 - **Rule:** a board may be deleted only by its owner (`403` otherwise).
-- **New components:** `LoginModal` / `SignupModal`, `AuthMenu` in `Header`.
-- **New state:** `currentUser` (global, `App`).
+- **New components:** `AuthModal` (combined login/signup, tabbed), `AuthMenu` in `Header`.
+- **New state:** `currentUser` (global, via `useAuth` hook in `App`).
+- **Frontend status (built):** The login/logout UI is implemented. `AuthMenu` sits in the header
+  (Sign in button → opens `AuthModal`; signed in → avatar dropdown with Log out). The `lib/auth.js`
+  data layer mirrors `lib/api.js`: it calls the real `/api/auth/*` endpoints when `VITE_USE_API=true`
+  (with `credentials: 'include'` for the session cookie) and otherwise falls back to a localStorage
+  "session" so the flow works in the demo. **Backend (teammates):** implement the four endpoints
+  above; the frontend already speaks this contract.
 
 ### 6.2 Comments
 - **New model:** `Comment { id, cardId (FK, cascade), message, author?, createdAt }`.

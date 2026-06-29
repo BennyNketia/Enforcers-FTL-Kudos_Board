@@ -109,3 +109,17 @@ export const CheckIcon = (p) => (
     <path d="m20 6-11 11-5-5" />
   </svg>
 )
+
+export const UserIcon = (p) => (
+  <svg viewBox="0 0 24 24" width="20" height="20" {...base} {...p}>
+    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+    <circle cx="12" cy="7" r="4" />
+  </svg>
+)
+
+export const LogOutIcon = (p) => (
+  <svg viewBox="0 0 24 24" width="20" height="20" {...base} {...p}>
+    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+    <path d="m16 17 5-5-5-5M21 12H9" />
+  </svg>
+)

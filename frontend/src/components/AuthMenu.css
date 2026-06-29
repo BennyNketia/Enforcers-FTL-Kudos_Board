@@ -1,0 +1,100 @@
+.auth-menu {
+  position: relative;
+}
+
+/* Avatar button (signed in). Matches the 42px square of the theme toggle. */
+.auth-menu__trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border);
+  background-color: var(--surface);
+  transition: border-color var(--transition-base), transform var(--transition-fast),
+    box-shadow var(--transition-base);
+}
+.auth-menu__trigger:hover {
+  border-color: color-mix(in srgb, var(--primary) 40%, var(--border));
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+/* The avatar chip fills the trigger a touch larger than its base 28px. */
+.auth-menu__trigger .avatar {
+  width: 32px;
+  height: 32px;
+  font-size: 0.8125rem;
+}
+
+.auth-menu__dropdown {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  right: 0;
+  z-index: 60;
+  min-width: 220px;
+  padding: var(--space-2);
+  background-color: var(--surface-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  animation: fade-slide-up var(--transition-fast) both;
+}
+
+.auth-menu__identity {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+}
+.auth-menu__identity-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.auth-menu__name {
+  font-weight: 600;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.auth-menu__hint {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.auth-menu__divider {
+  height: 1px;
+  margin: var(--space-1) 0;
+  background-color: var(--border);
+}
+
+.auth-menu__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  text-align: left;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+.auth-menu__item:hover {
+  background-color: var(--danger-soft);
+  color: var(--danger);
+}
+
+@media (max-width: 560px) {
+  .auth-menu__signin-label {
+    display: none;
+  }
+  .auth-menu__signin {
+    width: 38px;
+    padding: 0;
+  }
+}
