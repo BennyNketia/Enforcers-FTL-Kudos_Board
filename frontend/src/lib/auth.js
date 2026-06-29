@@ -4,9 +4,9 @@
 // Mirrors lib/api.js: the same module exposes one uniform contract and chooses
 // between a real HTTP backend and a localStorage fallback. The Express + Prisma
 // auth endpoints (planning.md §6.1: POST /api/auth/signup, /login, /logout and
-// GET /api/auth/me) aren't built yet, so the localStorage path lets the UI work
-// end-to-end in the demo. When the backend lands, set VITE_USE_API=true and the
-// http* paths run — components consume these functions, not storage details.
+// GET /api/auth/me) are implemented with stateless JWTs. Set VITE_USE_API=true
+// to use them; otherwise the localStorage path keeps the UI working offline.
+// Components consume these functions, not storage/token details.
 // ============================================================================
 
 const USE_API = import.meta.env.VITE_USE_API === 'true'
@@ -92,12 +92,34 @@ async function localMe() {
 }
 
 // ---- HTTP implementation (used when VITE_USE_API=true) ---------------------
+//
+// The backend uses stateless JWTs (not cookies): signup/login return
+// { token, user }. We persist the token and send it as `Authorization: Bearer`
+// on later requests. Logout just discards the token client-side.
+//
+// NOTE: storing the token in localStorage exposes it to XSS (any injected
+// script can read it). That's the accepted tradeoff for header-based JWT auth;
+// an httpOnly cookie would be safer but requires a cookie-session backend.
+
+const TOKEN_KEY = 'kudos-auth-token'
+
+function getToken() {
+  return localStorage.getItem(TOKEN_KEY)
+}
+
+function setToken(token) {
+  if (token) localStorage.setItem(TOKEN_KEY, token)
+  else localStorage.removeItem(TOKEN_KEY)
+}
 
 async function http(method, path, body) {
+  const token = getToken()
   const res = await fetch(`${API_BASE}${path}`, {
     method,
-    credentials: 'include', // send/receive the session cookie
-    headers: body ? { 'Content-Type': 'application/json' } : undefined,
+    headers: {
+      ...(body ? { 'Content-Type': 'application/json' } : {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
     body: body ? JSON.stringify(body) : undefined,
   })
   if (res.status === 204) return null
@@ -106,16 +128,33 @@ async function http(method, path, body) {
   return data
 }
 
+// signup/login return { token, user }: stash the token, hand back just the user
+// so callers (AuthModal) keep their existing contract.
+async function httpAuthenticate(path, data) {
+  const { token, user } = await http('POST', path, data)
+  setToken(token)
+  return user
+}
+
 // ---- public API (uniform regardless of backend) ---------------------------
 
 export const auth = {
-  signup: (data) => (USE_API ? http('POST', '/auth/signup', data) : localSignup(data)),
-  login: (data) => (USE_API ? http('POST', '/auth/login', data) : localLogin(data)),
-  logout: () => (USE_API ? http('POST', '/auth/logout') : localLogout()),
-  // Returns the current user or null. The HTTP backend returns 401 for guests;
-  // treat that as "not signed in" rather than an error.
+  signup: (data) => (USE_API ? httpAuthenticate('/auth/signup', data) : localSignup(data)),
+  login: (data) => (USE_API ? httpAuthenticate('/auth/login', data) : localLogin(data)),
+  logout: async () => {
+    if (!USE_API) return localLogout()
+    try {
+      await http('POST', '/auth/logout')
+    } finally {
+      setToken(null) // discard the token even if the request fails
+    }
+    return null
+  },
+  // Returns the current user or null. No token → skip the call. The backend
+  // returns null (or 401) for an invalid token; treat both as "not signed in".
   me: async () => {
     if (!USE_API) return localMe()
+    if (!getToken()) return null
     try {
       return await http('GET', '/auth/me')
     } catch (err) {
