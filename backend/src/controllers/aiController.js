@@ -79,18 +79,73 @@ export async function compose(req, res, next) {
   }
 }
 
+const MAX_MESSAGE_LEN = 500
+const MAX_TERMS = 3
+
+// LLMs don't reliably emit clean JSON even when asked. Try JSON first, then fall
+// back to comma/newline splitting, so a slightly-off response still yields terms.
+function parseTerms(raw) {
+  let terms = []
+  try {
+    const parsed = JSON.parse(raw)
+    if (Array.isArray(parsed)) terms = parsed
+  } catch {
+    // Not JSON — strip any leading "1." / "-" bullets and split on commas/newlines.
+    terms = raw
+      .replace(/^[\s\-*\d.)]+/gm, '')
+      .split(/[,\n]/)
+  }
+  // Normalize: strings only, trimmed, no wrapping quotes, deduped, capped.
+  return [...new Set(
+    terms
+      .filter((t) => typeof t === 'string')
+      .map((t) => t.replace(/^["'“”]+|["'“”]+$/g, '').trim().toLowerCase())
+      .filter(Boolean),
+  )].slice(0, MAX_TERMS)
+}
+
 /**
- * POST /api/ai/suggest-gifs   — TEAMMATE'S FEATURE (not implemented yet).
+ * POST /api/ai/suggest-gifs
+ * Body: { message: string }
+ * Returns: { terms: string[] }   (2–3 short GIPHY search terms)
  *
- * Planned: take the drafted `message`, ask the model for 2–3 short GIPHY search
- * terms that match its vibe, return { terms: string[] }. The frontend then runs
- * those through the existing GIPHY search. See planning.md §7.2.
- *
- * To implement: build the prompt, call `chat(..., { maxTokens: 60 })`, parse the
- * terms (a JSON array or comma-split), and `res.json({ terms })`.
+ * Reads the drafted kudos message and suggests search terms whose vibe matches.
+ * The frontend feeds these into the existing GIPHY search. See planning.md §7.2.
  */
-export async function suggestGifs(req, res) {
-  res.status(501).json({ error: 'AI GIF suggestions are not implemented yet.' })
+export async function suggestGifs(req, res, next) {
+  try {
+    const { message } = req.body || {}
+
+    if (typeof message !== 'string' || !message.trim()) {
+      return res.status(400).json({ error: 'A message is required to suggest GIFs.' })
+    }
+    if (message.length > MAX_MESSAGE_LEN) {
+      return res.status(400).json({ error: `Message is too long (max ${MAX_MESSAGE_LEN} characters).` })
+    }
+
+    const raw = await chat(
+      [
+        {
+          role: 'system',
+          content:
+            'You suggest short GIPHY search terms for a kudos/celebration message. ' +
+            `Return ONLY a JSON array of ${MAX_TERMS} short search terms (1–2 words each), ` +
+            'lowercase, no explanation. Example: ["high five","celebration","teamwork"]. ' +
+            'The terms should capture the mood and theme of the message, not quote it.',
+        },
+        { role: 'user', content: message.trim() },
+      ],
+      { temperature: 0.7, maxTokens: 60 },
+    )
+
+    const terms = parseTerms(raw)
+    if (terms.length === 0) {
+      return res.status(502).json({ error: 'Couldn’t come up with GIF ideas. Try again.' })
+    }
+    res.json({ terms })
+  } catch (err) {
+    next(err)
+  }
 }
 
 // Re-exported so the route layer can special-case the "no key configured" case.

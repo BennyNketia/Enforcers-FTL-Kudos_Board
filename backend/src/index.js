@@ -12,7 +12,11 @@ import cors from 'cors'
 
 import aiRouter from './routes/ai.js'
 import boardsRouter from './routes/boards.js'
+import giphyRouter from './routes/giphy.js'
+import authRouter from './routes/auth.js'
 import { isConfigured, OpenRouterNotConfiguredError } from './lib/openrouter.js'
+import { GiphyNotConfiguredError } from './lib/giphy.js'
+import { AuthConfigError } from './lib/auth.js'
 
 const app = express()
 const PORT = process.env.PORT || 3000
@@ -33,6 +37,8 @@ app.get('/api/health', (_req, res) => {
 // --- Routes -----------------------------------------------------------------
 app.use('/api/ai', aiRouter)
 app.use('/api/boards', boardsRouter)
+app.use('/api/giphy', giphyRouter)
+app.use('/api/auth', authRouter)
 
 // --- 404 for unknown /api paths ---------------------------------------------
 app.use('/api', (_req, res) => {
@@ -42,7 +48,11 @@ app.use('/api', (_req, res) => {
 // --- Central error handler --------------------------------------------------
 // eslint-disable-next-line no-unused-vars
 app.use((err, _req, res, _next) => {
-  if (err instanceof OpenRouterNotConfiguredError) {
+  if (
+    err instanceof OpenRouterNotConfiguredError ||
+    err instanceof GiphyNotConfiguredError ||
+    err instanceof AuthConfigError
+  ) {
     return res.status(500).json({ error: err.message })
   }
   console.error('[error]', err)
