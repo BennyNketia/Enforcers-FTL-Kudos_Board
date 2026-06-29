@@ -537,7 +537,7 @@ model Card {
 | `cards`            | `Card[]`         | `[]`     | `BoardDetailPage` | Fetched on mount; updated after create/delete/upvote/pin. |
 | `loading`          | `boolean`        | `true`   | `BoardDetailPage` | True while board/cards load. |
 | `error`            | `string \| null` | `null`   | `BoardDetailPage` | Set on fetch failure (incl. 404 → "board not found"). |
-| `isAddCardOpen`    | `boolean`        | `false`  | `BoardDetailPage` | `BoardDetailHeader` "Add Card" opens; close/create closes. |
+| `isAddOpen`        | `boolean`        | `false`  | `BoardDetailPage` | `BoardDetailHeader` "Add Card" opens; close/create closes. |
 
 **Card ordering (derived, not stored state):** sort `pinned === true` first by `pinnedAt` desc,
 then `pinned === false` by `createdAt` desc. The backend returns cards pre-sorted (§2.2); the
@@ -778,6 +778,51 @@ performed after the boards/cards routes landed (commit adding Prisma + CRUD).
 ### Intentional spec updates made during backend implementation
 - **Prisma generator output path removed.** `prisma init` scaffolded `generator client { output = "../src/generated/prisma" }`, which forced a non-standard import. Reverted to the default so `@prisma/client` resolves conventionally — no spec impact, but worth noting for teammates running `prisma generate`.
 - **Optional fields serialize as `null`, not omitted/empty string.** Updated Appendix B types to `string | null` (was `string | undefined`) for `imageUrl`, `author` on `Board` and `author` on `Card`. Reason: Prisma returns `null` for nullable columns and the existing `pinnedAt: number | null` already established this convention.
+
+---
+
+## Final Spec Reconciliation — Full Pipeline (Milestone 3)
+
+Audit of the frontend ↔ backend integration after switching the data layer to
+axios (`frontend/src/lib/api.js`) and pointing it at the live Express + Prisma
+backend (`VITE_USE_API=true`). Cross-checked every fetch call against §2 and
+every state shape against §4.
+
+### Frontend fetch calls verified against API contracts
+- `GET /api/boards?filter&search` (HomePage load + refetch on filter/search change) — ✅ matches spec. `cleanParams` strips empty `filter`/`search` so URL stays minimal. Response array is consumed via `Board[]` shape; all fields used (`id`, `title`, `category`, `imageUrl`, `author`, `createdAt`, `cardCount`) are present on the wire.
+- `GET /api/boards/:boardId` (BoardDetailPage mount) — ✅ matches spec. 404 surfaces as `err.status === 404` → "Board not found" empty state in [BoardDetailPage.jsx:35](frontend/src/pages/BoardDetailPage.jsx#L35); other errors set a generic message.
+- `POST /api/boards` (CreateBoardModal submit) — ✅ matches spec. Body sent: `{title, category, imageUrl, author}` — all required/optional fields present. **Note on optionals:** modal sends empty strings (`''`) for unset `imageUrl`/`author`, not `undefined`. Backend `validateCreateBoard` accepts strings of any length; controller's `imageUrl?.trim() || DEFAULT_COVERS[category]` and `author?.trim() || null` handle the empty-string case correctly. Documented below.
+- `DELETE /api/boards/:boardId` (BoardCard delete) — ✅ matches spec. 204 → optimistic remove from both `boards` and `allBoards` with rollback in catch.
+- `GET /api/boards/:boardId/cards` (BoardDetailPage mount) — ✅ matches spec. Backend pre-sorts pinned-first; frontend re-applies the same `sortCards` after optimistic mutations so order stays consistent.
+- `POST /api/boards/:boardId/cards` (CreateCardModal submit) — ✅ matches spec. Body: `{message, gifUrl, author}`. `author: ''` again handled by controller (`author?.trim() || null`).
+- `DELETE /api/boards/:boardId/cards/:cardId` — ✅ matches spec. Path includes both ids (the spec's 404 case "card not found in that board" requires both).
+- `PATCH /api/boards/:boardId/cards/:cardId/upvote` — ✅ matches spec. No body. Frontend optimistically `+1`s, replaces with server response on success, `-1`s on failure.
+- `PATCH /api/boards/:boardId/cards/:cardId/pin` — ✅ matches spec. Body `{ pinned: boolean }`. Optimistic update stamps `pinnedAt: Date.now()` locally; server response (with authoritative `pinnedAt`) replaces it.
+
+### Frontend calls NOT defined in `/api` (intentional)
+- `POST /api/ai/compose` — defined in §8.1, implemented (`backend/src/controllers/aiController.js`). Called by `lib/ai.js`.
+- `POST /api/ai/suggest-gifs` — defined in §8.2, returns 501 by design (teammate task).
+- `GET https://api.giphy.com/v1/gifs/search` (direct, with `VITE_GIPHY_KEY`) — §2.3 documents both the proxy and direct-call options. The backend proxy `GET /api/giphy/search` is **not yet implemented**; `lib/giphy.js` falls back to a direct GIPHY call (or the curated demo GIFs) until it lands. Status: documented gap, intentional.
+- `POST /api/auth/{signup,login,logout}`, `GET /api/auth/me` (called by `lib/auth.js` when `VITE_USE_API=true`) — defined in §6.1 as a **deferred stretch**. With `VITE_USE_API=true`, these calls hit the backend's 404 handler. Frontend `AuthMenu` therefore appears broken when API mode is on. Status: documented gap, matches §6.1's "Backend (teammates): implement…" note.
+
+### Integration gaps found and resolved
+- **None functional for the required milestone surface (boards/cards CRUD).** Every endpoint the frontend calls in the required scope returns the shape the components expect; every required field the spec asks for is being sent.
+- **Empty-string vs `undefined` for optional fields (resolved by convention).** The frontend's create modals send `''` for unset `imageUrl`/`author`; the backend tolerates this (`?.trim() || null`) so the persisted row carries `null`. The spec was updated in the Milestone 2 reconciliation block to make `null` the canonical "absent" value (Appendix B). No code change needed — adding a paragraph here so future contributors see the intentional asymmetry between request (string, possibly empty) and response (`string | null`).
+- **State name drift (resolved by updating the spec).** §4.3 lists `isAddCardOpen` on `BoardDetailPage`, but the implementation uses `isAddOpen`. Spec updated below — same field, just a different name. Trivial; flagged for parity only.
+
+### State architecture verified
+- **App:** `theme` ✅. Stored at `kudos-theme`, applied via `data-theme` on the root.
+- **HomePage:** `boards`, `allBoards`, `loading`, `error`, `activeFilter`, `searchQuery`, `isCreateOpen` ✅ all present and used as documented. `?new=1` deep link implemented exactly as specified (open once, strip with `replace`).
+- **BoardDetailPage:** `board`, `cards`, `loading`, `error`, `isAddOpen` — ⚠️ spec said `isAddCardOpen`; **spec updated to `isAddOpen`** in §4.3.
+- **Local component state** (modals, GifPicker, transient busy/animating flags) ✅ matches §4.4.
+
+### Final code–spec parity assessment
+- ✅ **Yes — the boards/cards pipeline is code-spec parity.** Every required endpoint exists, validates per spec, and returns the documented shape; the frontend issues exactly the calls §2 describes; state architecture in §4 matches the actual components except for the one renamed flag noted above.
+- **Remaining intentional divergences (already documented elsewhere in this file):**
+  1. **Auth backend not built** — §6.1 deferred stretch. Frontend speaks the contract; backend returns 404. Demo path still works with `VITE_USE_API=false`.
+  2. **GIPHY proxy not built** — §2.3 lists it as recommended but allows the direct-call alternative `lib/giphy.js` uses today.
+  3. **`POST /api/ai/suggest-gifs` is a 501 stub** — §8.2, teammate task.
+  4. **Backend port is 3000** (not 3001) — documented in §8.3 and the .env files.
 
 ---
 
