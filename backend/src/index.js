@@ -11,10 +11,11 @@ import express from 'express'
 import cors from 'cors'
 
 import aiRouter from './routes/ai.js'
+import boardsRouter from './routes/boards.js'
 import { isConfigured, OpenRouterNotConfiguredError } from './lib/openrouter.js'
 
 const app = express()
-const PORT = process.env.PORT || 3001
+const PORT = process.env.PORT || 3000
 
 // --- Middleware -------------------------------------------------------------
 const corsOrigin = process.env.CORS_ORIGIN
@@ -31,6 +32,7 @@ app.get('/api/health', (_req, res) => {
 
 // --- Routes -----------------------------------------------------------------
 app.use('/api/ai', aiRouter)
+app.use('/api/boards', boardsRouter)
 
 // --- 404 for unknown /api paths ---------------------------------------------
 app.use('/api', (_req, res) => {
