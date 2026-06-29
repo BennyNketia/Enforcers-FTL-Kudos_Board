@@ -85,7 +85,7 @@ export default function CreateCardModal({ open, boardCategory, onClose, onCreate
           <label className="field__label">
             Choose a GIF<span className="req">*</span>
           </label>
-          <GifPicker selectedUrl={form.gifUrl} onSelect={(url) => set('gifUrl', url)} />
+          <GifPicker selectedUrl={form.gifUrl} onSelect={(url) => set('gifUrl', url)} message={form.message} />
           {errors.gifUrl && <span className="field__error">{errors.gifUrl}</span>}
         </div>
 

@@ -1,14 +1,18 @@
 import { useEffect, useRef, useState } from 'react'
 import { searchGifs } from '../lib/giphy.js'
-import { SearchIcon, CheckIcon, ImageIcon } from './icons.jsx'
+import { suggestGifTerms } from '../lib/ai.js'
+import { SearchIcon, CheckIcon, ImageIcon, SparkleIcon } from './icons.jsx'
 import './GifPicker.css'
 
 // Search GIPHY and select a GIF. Shows loading / empty / error states and marks
-// the chosen GIF with a checkmark overlay.
-export default function GifPicker({ onSelect, selectedUrl }) {
+// the chosen GIF with a checkmark overlay. When a `message` is provided, offers
+// AI-suggested search terms (chips) that run a search when clicked.
+export default function GifPicker({ onSelect, selectedUrl, message = '' }) {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState([])
   const [status, setStatus] = useState('idle') // idle | searching | results | error
+  const [terms, setTerms] = useState([])
+  const [suggesting, setSuggesting] = useState(false)
   const debounce = useRef()
 
   // Load some trending GIFs on first open.
@@ -36,6 +40,26 @@ export default function GifPicker({ onSelect, selectedUrl }) {
     debounce.current = setTimeout(() => runSearch(next), 350)
   }
 
+  // Ask the AI for search terms that match the kudos message's vibe.
+  async function getSuggestions() {
+    if (!message.trim() || suggesting) return
+    setSuggesting(true)
+    try {
+      setTerms(await suggestGifTerms(message.trim()))
+    } catch {
+      setTerms([]) // Fail quietly — the manual search box still works.
+    } finally {
+      setSuggesting(false)
+    }
+  }
+
+  // Clicking a suggested term fills the search box and runs it immediately.
+  function useTerm(term) {
+    setQuery(term)
+    clearTimeout(debounce.current)
+    runSearch(term)
+  }
+
   function handleSubmit(e) {
     e.preventDefault()
     clearTimeout(debounce.current)
@@ -46,6 +70,33 @@ export default function GifPicker({ onSelect, selectedUrl }) {
 
   return (
     <div className="gif-picker">
+      {message.trim() && (
+        <div className="gif-picker__suggest">
+          <button
+            type="button"
+            className="gif-picker__suggest-btn"
+            onClick={getSuggestions}
+            disabled={suggesting}
+          >
+            {suggesting ? (
+              <><span className="spinner" aria-hidden /> Thinking…</>
+            ) : (
+              <><SparkleIcon width="14" height="14" /> Suggest GIFs</>
+            )}
+          </button>
+          {terms.map((term) => (
+            <button
+              type="button"
+              key={term}
+              className="gif-picker__term"
+              onClick={() => useTerm(term)}
+            >
+              {term}
+            </button>
+          ))}
+        </div>
+      )}
+
       <form className="gif-picker__search" onSubmit={handleSubmit}>
         <span className="gif-picker__search-icon" aria-hidden><SearchIcon width="18" height="18" /></span>
         <input
