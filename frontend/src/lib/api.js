@@ -1,18 +1,25 @@
 // ============================================================================
 // Data layer.
 //
-// The Express + Prisma backend (see planning.md §2) isn't built yet, so this
-// module implements the SAME contract against localStorage. Method signatures
-// and return shapes match the API, so swapping to fetch() later touches ONLY
-// this file — components consume these functions, not storage details.
-//
-// To switch to the real API: set VITE_USE_API=true and the http* paths run.
+// Two implementations behind one uniform interface (the `api` object below):
+//   - HTTP (axios) when VITE_USE_API=true — talks to the Express + Prisma
+//     backend (planning.md §2). Vite proxies /api to localhost:3001 in dev.
+//   - localStorage fallback otherwise, so the UI is usable without a backend.
+// Components consume `api.*` — they never see fetch/axios/storage details.
 // ============================================================================
 
+import axios from 'axios'
 import { seedBoards, seedCards } from './seed.js'
 
 const USE_API = import.meta.env.VITE_USE_API === 'true'
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api'
+
+// One axios instance, base URL applied automatically. Keeps the per-call paths
+// short and easy to compare against the contract in planning.md §2.
+const client = axios.create({
+  baseURL: API_BASE,
+  headers: { 'Content-Type': 'application/json' },
+})
 
 const BOARDS_KEY = 'kudos-boards'
 const CARDS_KEY = 'kudos-cards'
@@ -159,6 +166,8 @@ async function localPinCard(boardId, cardId, pinned) {
 
 // ---- HTTP implementation (used when VITE_USE_API=true) ---------------------
 
+// Carries the HTTP status so call sites can distinguish 404 from a transport error
+// (see BoardDetailPage's `err?.status === 404` check).
 class ApiError extends Error {
   constructor(status, message) {
     super(message)
@@ -167,24 +176,25 @@ class ApiError extends Error {
 }
 
 async function http(method, path, body) {
-  const res = await fetch(`${API_BASE}${path}`, {
-    method,
-    headers: body ? { 'Content-Type': 'application/json' } : undefined,
-    body: body ? JSON.stringify(body) : undefined,
-  })
-  if (res.status === 204) return null
-  const data = await res.json().catch(() => null)
-  if (!res.ok) throw new ApiError(res.status, data?.error || res.statusText)
-  return data
+  try {
+    const res = await client.request({ method, url: path, data: body })
+    // 204 No Content → axios returns empty string; normalize to null.
+    return res.status === 204 ? null : res.data
+  } catch (err) {
+    // The backend returns `{ error, details? }` (planning.md §2). Surface that.
+    const status = err.response?.status ?? 0
+    const message = err.response?.data?.error || err.message || 'Request failed'
+    throw new ApiError(status, message)
+  }
 }
 
-function qs(params) {
-  const sp = new URLSearchParams()
-  Object.entries(params).forEach(([k, v]) => {
-    if (v !== undefined && v !== null && v !== '') sp.set(k, v)
+// Drop empty/undefined values so the URL stays clean (?filter=all stripped if 'all').
+function cleanParams(params) {
+  const out = {}
+  Object.entries(params || {}).forEach(([k, v]) => {
+    if (v !== undefined && v !== null && v !== '') out[k] = v
   })
-  const s = sp.toString()
-  return s ? `?${s}` : ''
+  return out
 }
 
 // ---- default cover image per category -------------------------------------
@@ -199,32 +209,52 @@ function defaultBoardImage(category) {
 }
 
 // ---- public API (uniform regardless of backend) ---------------------------
+//
+// Routes here mirror planning.md §2 — keep them in sync if either side changes.
 
 export const api = {
+  // GET /api/boards?filter&search
   getBoards: (opts) =>
-    USE_API ? http('GET', `/boards${qs(opts || {})}`) : localGetBoards(opts),
+    USE_API
+      ? client.get('/boards', { params: cleanParams(opts) }).then((r) => r.data)
+      : localGetBoards(opts),
+
+  // GET /api/boards/:id
   getBoard: (id) => (USE_API ? http('GET', `/boards/${id}`) : localGetBoard(id)),
+
+  // POST /api/boards   { title, category, imageUrl?, author? }
   createBoard: (data) =>
     USE_API ? http('POST', '/boards', data) : localCreateBoard(data),
+
+  // DELETE /api/boards/:id   → 204
   deleteBoard: (id) =>
     USE_API ? http('DELETE', `/boards/${id}`) : localDeleteBoard(id),
 
+  // GET /api/boards/:boardId/cards   (server pre-sorts: pinned-first)
   getCards: (boardId) =>
     USE_API ? http('GET', `/boards/${boardId}/cards`) : localGetCards(boardId),
+
+  // POST /api/boards/:boardId/cards   { message, gifUrl, author? }
   createCard: (boardId, data) =>
     USE_API ? http('POST', `/boards/${boardId}/cards`, data) : localCreateCard(boardId, data),
+
+  // DELETE /api/boards/:boardId/cards/:cardId   → 204
   deleteCard: (boardId, cardId) =>
     USE_API
       ? http('DELETE', `/boards/${boardId}/cards/${cardId}`)
       : localDeleteCard(boardId, cardId),
+
+  // PATCH /api/boards/:boardId/cards/:cardId/upvote   (no body)
   upvoteCard: (boardId, cardId) =>
     USE_API
       ? http('PATCH', `/boards/${boardId}/cards/${cardId}/upvote`)
       : localUpvoteCard(boardId, cardId),
+
+  // PATCH /api/boards/:boardId/cards/:cardId/pin   { pinned: boolean }
   pinCard: (boardId, cardId, pinned) =>
     USE_API
       ? http('PATCH', `/boards/${boardId}/cards/${cardId}/pin`, { pinned })
       : localPinCard(boardId, cardId, pinned),
 }
 
-export { defaultBoardImage }
+export { defaultBoardImage, ApiError }
