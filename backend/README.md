@@ -14,7 +14,7 @@ composer. It keeps the OpenRouter API key server-side (planning.md §2.3 / §7).
 cd backend
 npm install
 cp .env.example .env        # then paste your OpenRouter key into .env
-npm run dev                 # http://localhost:3001  (Vite proxies /api here)
+npm run dev                 # http://localhost:3000  (Vite proxies /api here)
 ```
 
 Get a free key at https://openrouter.ai/keys and put it in `.env`:
