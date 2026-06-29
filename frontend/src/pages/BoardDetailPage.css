@@ -1,8 +1,11 @@
 .board-detail {
-  padding-top: var(--space-8);
+  padding-top: var(--space-10);
   padding-bottom: var(--space-20);
   /* Keep sparse boards from collapsing into a tiny strip above the footer. */
-  min-height: 42vh;
+  min-height: 48vh;
+}
+@media (max-width: 768px) {
+  .board-detail { padding-top: var(--space-8); }
 }
 
 .board-detail__back {

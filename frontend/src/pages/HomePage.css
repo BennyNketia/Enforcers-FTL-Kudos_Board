@@ -1,10 +1,19 @@
+/* Hero-to-content gap ≈ 40px. */
 .home {
-  padding-top: var(--space-12);
+  padding-top: var(--space-10);
   padding-bottom: var(--space-20);
 }
 
+/* Section rhythm: 64px desktop between the major home blocks (overrides the
+   global .stack default), tightening on smaller screens. */
+.home.stack > * + * {
+  margin-top: var(--space-16);
+}
+
 .home__all {
-  scroll-margin-top: 84px; /* clears the sticky header on anchor jumps */
+  /* Clears the 72px sticky header (+ breathing room) on anchor jumps so the
+     "All boards" heading is never hidden under the navbar. */
+  scroll-margin-top: 88px;
 }
 
 .home__toolbar {
@@ -22,13 +31,30 @@
   margin-bottom: var(--space-4);
 }
 
+/* Tablet: 40px section rhythm. */
+@media (max-width: 1023px) {
+  .home.stack > * + * {
+    margin-top: var(--space-10);
+  }
+}
+
 @media (max-width: 768px) {
   .home__toolbar {
     flex-direction: column;
     align-items: stretch;
     gap: var(--space-3);
   }
-  .home__new {
-    display: none; /* create is already in the header on small screens */
+  /* Hide the redundant toolbar "New board" on small screens — create already
+     lives in the sticky header. Scoped with `.home` so it reliably overrides
+     the base `.ui-btn { display: inline-flex }` regardless of CSS load order. */
+  .home .home__new {
+    display: none;
+  }
+}
+
+/* Mobile: 28px section rhythm. */
+@media (max-width: 640px) {
+  .home.stack > * + * {
+    margin-top: var(--space-8);
   }
 }

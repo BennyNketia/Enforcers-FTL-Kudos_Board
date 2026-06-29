@@ -1,11 +1,25 @@
 import { Link } from 'react-router-dom'
 import CategoryTag from './CategoryTag.jsx'
-import { ArrowLeftIcon, PlusIcon, LayersIcon } from './icons.jsx'
+import { ArrowLeftIcon, PlusIcon, LayersIcon, ClockIcon } from './icons.jsx'
 import './BoardDetailHeader.css'
 
 function initialOf(name) {
   const t = (name || '').trim()
   return t ? t[0].toUpperCase() : '🙂'
+}
+
+// "Jun 28, 2026" — only rendered when the board carries a createdAt timestamp.
+function formatDate(ts) {
+  if (!ts) return null
+  try {
+    return new Date(ts).toLocaleDateString(undefined, {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    })
+  } catch {
+    return null
+  }
 }
 
 // Board page header: a cover banner using the board's image with a dark gradient
@@ -14,6 +28,7 @@ function initialOf(name) {
 // area. Falls back to a category gradient when no cover image exists.
 export default function BoardDetailHeader({ board, cardCount, onAddCard }) {
   const count = typeof cardCount === 'number' ? cardCount : board.cardCount ?? 0
+  const created = formatDate(board.createdAt)
 
   return (
     <header className={`board-header board-header--${board.category}${board.imageUrl ? ' board-header--has-cover' : ''}`}>
@@ -26,7 +41,7 @@ export default function BoardDetailHeader({ board, cardCount, onAddCard }) {
 
       <div className="container board-header__inner">
         <Link to="/" className="board-header__back t-label">
-          <ArrowLeftIcon width="18" height="18" />
+          <ArrowLeftIcon width="16" height="16" />
           <span>All boards</span>
         </Link>
 
@@ -39,10 +54,17 @@ export default function BoardDetailHeader({ board, cardCount, onAddCard }) {
                 <span className="avatar board-header__avatar" aria-hidden>{initialOf(board.author)}</span>
                 {board.author ? `by ${board.author}` : 'Anonymous'}
               </span>
+              <span className="board-header__dot" aria-hidden>·</span>
               <span className="count-badge board-header__count">
                 <LayersIcon width="14" height="14" />
                 {count} {count === 1 ? 'card' : 'cards'}
               </span>
+              {created && (
+                <span className="board-header__date">
+                  <ClockIcon width="14" height="14" />
+                  {created}
+                </span>
+              )}
             </div>
           </div>
 

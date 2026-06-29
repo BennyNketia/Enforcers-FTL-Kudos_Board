@@ -26,6 +26,7 @@
 /* --- Cover banner --- */
 .board-header--has-cover {
   min-height: 320px;
+  max-height: 340px;
   display: flex;
   align-items: stretch;
   border-bottom: none;
@@ -40,12 +41,14 @@
   height: 100%;
   object-fit: cover;
 }
+/* Stronger, evenly-weighted scrim so white title + chips stay legible over any
+   cover image (the old version went near-transparent at the top). */
 .board-header__scrim {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(to top, rgba(12, 10, 24, 0.92) 0%, rgba(12, 10, 24, 0.55) 45%, rgba(12, 10, 24, 0.35) 100%),
-    linear-gradient(to right, rgba(12, 10, 24, 0.45), transparent 60%);
+    linear-gradient(to top, rgba(10, 8, 20, 0.94) 0%, rgba(10, 8, 20, 0.62) 48%, rgba(10, 8, 20, 0.4) 100%),
+    linear-gradient(to right, rgba(10, 8, 20, 0.5), transparent 65%);
 }
 .board-header--has-cover .board-header__inner {
   display: flex;
@@ -62,21 +65,26 @@
   position: relative;
 }
 
+/* Compact breadcrumb-style back link. `align-self: flex-start` + width:max-content
+   keep it from stretching to full width inside the column-flex cover header
+   (that stretch was what produced the giant glass "All boards" bar). */
 .board-header__back {
   display: inline-flex;
+  align-self: flex-start;
+  width: max-content;
   align-items: center;
-  gap: var(--space-2);
+  gap: 6px;
   color: var(--text-secondary);
-  margin-bottom: var(--space-6);
-  padding: 6px 12px 6px 8px;
-  border-radius: var(--radius-full);
-  background-color: var(--surface-translucent);
-  border: 1px solid var(--border);
-  transition: color var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
+  margin-bottom: var(--space-5);
+  padding: 6px 4px;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  background-color: transparent;
+  border: none;
+  transition: color var(--transition-fast), transform var(--transition-fast);
 }
 .board-header__back:hover {
   color: var(--text-primary);
-  border-color: color-mix(in srgb, var(--primary) 40%, var(--border));
   transform: translateX(-2px);
 }
 
@@ -119,6 +127,18 @@
   width: 26px;
   height: 26px;
 }
+.board-header__dot {
+  color: var(--muted-text);
+  font-weight: 700;
+}
+.board-header__date {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
 
 /* Themed Add button per category (overrides the gradient primary). */
 .board-header__add { flex: 0 0 auto; }
@@ -128,16 +148,13 @@
 
 /* --- White text + glassy chips when over a cover image --- */
 .board-header--has-cover .board-header__title { color: #fff; }
-.board-header--has-cover .board-header__author { color: rgba(255, 255, 255, 0.88); }
+.board-header--has-cover .board-header__author { color: rgba(255, 255, 255, 0.9); }
+.board-header--has-cover .board-header__date { color: rgba(255, 255, 255, 0.82); }
+.board-header--has-cover .board-header__dot { color: rgba(255, 255, 255, 0.5); }
 .board-header--has-cover .board-header__back {
-  color: rgba(255, 255, 255, 0.92);
-  background-color: rgba(255, 255, 255, 0.16);
-  border-color: rgba(255, 255, 255, 0.28);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  color: rgba(255, 255, 255, 0.88);
 }
 .board-header--has-cover .board-header__back:hover {
-  background-color: rgba(255, 255, 255, 0.26);
   color: #fff;
 }
 .board-header--has-cover .board-header__count {
@@ -151,5 +168,9 @@
   .board-header__title { font-size: 1.875rem; }
   .board-header__row { align-items: stretch; }
   .board-header__add { justify-content: center; width: 100%; }
-  .board-header--has-cover { min-height: 280px; }
+  .board-header--has-cover { min-height: 240px; max-height: none; }
+  /* The created date is secondary; drop it on the smallest screens so the meta
+     row stays on one tidy line. */
+  .board-header__date,
+  .board-header__dot { display: none; }
 }

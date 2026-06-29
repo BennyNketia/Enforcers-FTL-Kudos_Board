@@ -23,18 +23,48 @@
   pointer-events: none;
 }
 
+/* Pinned: a subtle warm treatment, not an alarming gold outline. A thin top
+   accent bar + soft warm glow signal "highlighted" without reading as an error. */
 .kudo-card--pinned {
-  border: 2px solid var(--pinned-border);
+  border-color: color-mix(in srgb, var(--pinned) 35%, var(--border));
   box-shadow: var(--shadow-pinned);
 }
+.kudo-card--pinned::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  z-index: 2;
+  background-image: linear-gradient(90deg, var(--pinned), #FBBF24);
+}
 
+/* Small gold "Pinned" chip in the top-left of the media. */
 .kudo-card__pin-badge {
   position: absolute;
-  top: var(--space-2);
-  right: var(--space-2);
-  z-index: 1;
-  font-size: 1.1rem;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+  top: var(--space-3);
+  left: var(--space-3);
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px 4px 8px;
+  border-radius: var(--radius-full);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #78350F;
+  background-color: rgba(253, 211, 77, 0.95);
+  box-shadow: 0 2px 8px rgba(120, 53, 15, 0.25);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+/* No-media pinned cards: the chip floats top-right instead. */
+.kudo-card:not(:has(.kudo-card__media)) .kudo-card__pin-badge {
+  top: var(--space-3);
+  left: auto;
+  right: var(--space-3);
 }
 
 .kudo-card__media {
@@ -69,6 +99,8 @@
 
 .kudo-card__message {
   color: var(--text-primary);
+  font-size: 0.9375rem;
+  line-height: 1.55;
   font-weight: 500;
 }
 
@@ -104,8 +136,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
+  width: 40px;
+  height: 40px;
   border-radius: var(--radius-md);
   color: var(--muted-text);
   transition: background-color var(--transition-fast), color var(--transition-fast);
@@ -114,10 +146,24 @@
   background-color: var(--surface-hover);
   color: var(--text-primary);
 }
+.kudo-card__icon-btn:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
+}
+/* Pinned pin reads gold, with a warm tinted background on rest so its active
+   state is obvious. */
 .kudo-card__icon-btn--pinned {
   color: var(--pinned);
+  background-color: color-mix(in srgb, var(--pinned) 12%, transparent);
 }
-.kudo-card__icon-btn--danger:hover {
+.kudo-card__icon-btn--pinned:hover {
+  color: var(--pinned);
+  background-color: color-mix(in srgb, var(--pinned) 20%, transparent);
+}
+/* Delete is visually set apart — red on hover/focus so it never blends with pin. */
+.kudo-card__icon-btn--danger:hover,
+.kudo-card__icon-btn--danger:focus-visible {
   background-color: var(--danger-soft);
   color: var(--danger);
+  outline-color: var(--danger);
 }

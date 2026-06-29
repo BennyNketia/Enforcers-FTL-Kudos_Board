@@ -12,7 +12,9 @@
   --surface-hover: #F4F3F8;
   --border: #E5E3EE;
   --muted-text: #7B7898;
-  --input-bg: #F0EFF8;
+  /* Inputs read as real, fillable fields (white) — not disabled gray. The old
+     lavender wash (#F0EFF8) made every field look pre-disabled. */
+  --input-bg: #FFFFFF;
 
   /* --- Category: celebration --- */
   --celebration-accent: #F4628A;
@@ -87,7 +89,10 @@
   --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.10), 0 0 1px rgba(0, 0, 0, 0.06);
   --shadow-modal: 0 20px 60px rgba(0, 0, 0, 0.18), 0 0 1px rgba(0, 0, 0, 0.08);
   --shadow-button: 0 2px 8px rgba(0, 0, 0, 0.10);
-  --shadow-pinned: 0 0 0 2px #FCD34D, 0 8px 24px rgba(245, 158, 11, 0.18);
+  /* Pinned cards get a soft warm glow only — no hard gold ring. The ring made
+     pinned look like a validation error; a subtle shadow + thin top accent reads
+     as "highlighted" instead. */
+  --shadow-pinned: 0 8px 26px rgba(245, 158, 11, 0.16), 0 2px 6px rgba(245, 158, 11, 0.10);
 
   /* --- Transitions --- */
   --transition-fast: 150ms ease;
@@ -111,7 +116,11 @@
   /* --- Requested semantic aliases --- */
   --bg: var(--background);
   --text-primary: var(--foreground);
-  --text-secondary: var(--muted-text);
+  /* Secondary text (helper copy, stat labels, metadata) gets its own darker
+     value — not the lavender --muted-text (#7B7898 ≈ 3.6:1 on white, fails AA).
+     #5E5B7E is ≈ 6.4:1 on white so secondary copy clears WCAG AA. --muted-text
+     stays as-is for placeholders/icons where low contrast is intentional. */
+  --text-secondary: #5E5B7E;
   --celebration: var(--celebration-accent);
   --thank-you: var(--thankyou-accent);
   --inspiration: var(--inspiration-accent);
@@ -149,6 +158,8 @@
   --surface-hover: #25252F;
   --border: #2C2B38;
   --muted-text: #9C9AB8;
+  /* Brighter than --muted-text so secondary copy clears AA on dark surfaces. */
+  --text-secondary: #B8B6CF;
   --input-bg: #20202B;
 
   /* --- Category: celebration (dark) --- */

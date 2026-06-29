@@ -19,7 +19,8 @@
   background-color: var(--surface-elevated);
   border: 1px solid var(--border);
   border-radius: var(--radius-2xl);
-  box-shadow: var(--shadow-lg);
+  /* Softer, larger ambient shadow so the dialog lifts off the blurred overlay. */
+  box-shadow: 0 32px 80px -12px rgba(17, 12, 46, 0.32), 0 0 1px rgba(17, 12, 46, 0.1);
   animation: modal-pop var(--transition-base) var(--ease-spring) both;
 }
 
@@ -49,8 +50,9 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
   border-radius: var(--radius-full);
   color: var(--muted-text);
   transition: background-color var(--transition-fast), color var(--transition-fast);
@@ -58,6 +60,10 @@
 .modal-card__close:hover {
   background-color: var(--surface-hover);
   color: var(--text-primary);
+}
+.modal-card__close:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
 
 .modal-card__body {
@@ -91,6 +97,12 @@
 }
 .field__hint {
   font-weight: 400;
+  color: var(--text-secondary);
+}
+/* Helper text under an input (e.g. the Image URL guidance). */
+.field__help {
+  font-size: 0.8125rem;
+  line-height: 1.5;
   color: var(--text-secondary);
 }
 
@@ -150,6 +162,7 @@
   gap: var(--space-2);
 }
 .cat-option {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -160,23 +173,57 @@
   border: 1.5px solid var(--border);
   color: var(--text-secondary);
   transition: border-color var(--transition-fast), background-color var(--transition-fast),
-    transform var(--transition-fast), color var(--transition-fast);
+    transform var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast);
 }
 .cat-option:hover {
   transform: translateY(-2px);
   color: var(--text-primary);
 }
+.cat-option:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
 .cat-option__emoji { font-size: 1.4rem; line-height: 1; }
 .cat-option__label { font-size: 0.8125rem; font-weight: 600; }
+
+/* Small checkmark badge in the corner of the selected category. */
+.cat-option__check {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: var(--radius-full);
+  color: #fff;
+  background-color: var(--primary);
+}
 
 .cat-option--celebration:hover { border-color: var(--celebration-accent); }
 .cat-option--thankyou:hover { border-color: var(--thankyou-accent); }
 .cat-option--inspiration:hover { border-color: var(--inspiration-accent); }
 
-.cat-option--active { color: var(--text-primary); }
-.cat-option--active.cat-option--celebration { border-color: var(--celebration-accent); background-color: var(--celebration-accent-soft); }
-.cat-option--active.cat-option--thankyou { border-color: var(--thankyou-accent); background-color: var(--thankyou-accent-soft); }
-.cat-option--active.cat-option--inspiration { border-color: var(--inspiration-accent); background-color: var(--inspiration-accent-soft); }
+.cat-option--active { color: var(--text-primary); font-weight: 600; }
+.cat-option--active.cat-option--celebration {
+  border-color: var(--celebration-accent);
+  background-color: var(--celebration-accent-soft);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--celebration-accent) 18%, transparent);
+}
+.cat-option--active.cat-option--celebration .cat-option__check { background-color: var(--celebration-accent); }
+.cat-option--active.cat-option--thankyou {
+  border-color: var(--thankyou-accent);
+  background-color: var(--thankyou-accent-soft);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--thankyou-accent) 18%, transparent);
+}
+.cat-option--active.cat-option--thankyou .cat-option__check { background-color: var(--thankyou-accent); }
+.cat-option--active.cat-option--inspiration {
+  border-color: var(--inspiration-accent);
+  background-color: var(--inspiration-accent-soft);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--inspiration-accent) 18%, transparent);
+}
+.cat-option--active.cat-option--inspiration .cat-option__check { background-color: var(--inspiration-accent); }
 
 .modal-actions {
   display: flex;

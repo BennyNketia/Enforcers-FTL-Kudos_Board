@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import Modal from './Modal.jsx'
+import { CheckIcon } from './icons.jsx'
 import { BOARD_CATEGORIES } from '../lib/categories.js'
 
 const EMPTY = { title: '', category: '', imageUrl: '', author: '' }
@@ -51,7 +52,7 @@ export default function CreateBoardModal({ open, onClose, onCreate }) {
   }
 
   return (
-    <Modal open={open} title="Create New Board" onClose={onClose}>
+    <Modal open={open} title="Create New Board" onClose={onClose} maxWidth="31rem">
       <form onSubmit={handleSubmit} noValidate>
         <div className="field">
           <label className="field__label" htmlFor="board-title">
@@ -84,6 +85,11 @@ export default function CreateBoardModal({ open, onClose, onCreate }) {
                   className={`cat-option cat-option--${c.key}${active ? ' cat-option--active' : ''}`}
                   onClick={() => set('category', c.key)}
                 >
+                  {active && (
+                    <span className="cat-option__check" aria-hidden>
+                      <CheckIcon width="12" height="12" />
+                    </span>
+                  )}
                   <span className="cat-option__emoji" aria-hidden>{c.emoji}</span>
                   <span className="cat-option__label">{c.label}</span>
                 </button>
@@ -100,8 +106,12 @@ export default function CreateBoardModal({ open, onClose, onCreate }) {
             className="field__input"
             value={form.imageUrl}
             onChange={(e) => set('imageUrl', e.target.value)}
-            placeholder="https://…  (leave blank for a default cover)"
+            placeholder="https://…"
+            aria-describedby="board-image-hint"
           />
+          <span id="board-image-hint" className="field__help">
+            Paste an image or GIF URL, or leave blank for a default cover.
+          </span>
         </div>
 
         <div className="field">

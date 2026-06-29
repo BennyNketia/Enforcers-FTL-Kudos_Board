@@ -29,7 +29,12 @@ export default function KudoCard({
 
   return (
     <article className={`kudo-card${pinned ? ' kudo-card--pinned' : ''}${deleting ? ' kudo-card--deleting' : ''}`}>
-      {pinned && <span className="kudo-card__pin-badge" aria-label="Pinned">📌</span>}
+      {pinned && (
+        <span className="kudo-card__pin-badge">
+          <PinIcon filled width="12" height="12" />
+          Pinned
+        </span>
+      )}
 
       {gifUrl && (
         <div className="kudo-card__media">

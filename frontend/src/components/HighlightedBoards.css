@@ -11,6 +11,6 @@
 }
 
 @media (max-width: 640px) {
-  .highlighted__grid { grid-template-columns: 1fr; }
+  .highlighted__grid { grid-template-columns: 1fr; gap: var(--space-4); }
   .highlighted__grid > :nth-child(3):last-child { grid-column: auto; }
 }

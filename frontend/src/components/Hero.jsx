@@ -16,7 +16,7 @@ export default function Hero({ stats, loading, onPrimary }) {
       <span className="hero__blob hero__blob--2" aria-hidden />
       <div className="container hero__inner">
         <div className="hero__copy">
-          <span className="hero__eyebrow t-tag">Team appreciation, organized</span>
+          <span className="hero__eyebrow t-tag">Team appreciation · organized</span>
           <h1 className="hero__headline t-display-xl">
             Spread a little <span className="hero__accent">kudos</span>
           </h1>
