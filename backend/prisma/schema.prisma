@@ -23,17 +23,23 @@ model User {
   id           String   @id @default(uuid())
   username     String   @unique // login identity; DB enforces uniqueness
   passwordHash String // bcrypt hash — never the plaintext password
+  isAdmin      Boolean  @default(false)
   createdAt    DateTime @default(now())
+  boards       Board[]
 }
 
 model Board {
   id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   title     String
   category  Category
   imageUrl  String?
   author    String?
   createdAt DateTime @default(now())
   cards     Card[]
+
+  @@index([userId])
 }
 
 model Card {

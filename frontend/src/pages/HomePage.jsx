@@ -8,11 +8,15 @@ import SearchBar from '../components/SearchBar.jsx'
 import BoardGrid from '../components/BoardGrid.jsx'
 import CreateBoardModal from '../components/CreateBoardModal.jsx'
 import { api } from '../lib/api.js'
+import { useAuth } from '../hooks/useAuth.js'
 import './HomePage.css'
 
 const WEEK = 7 * 24 * 60 * 60 * 1000
 
 export default function HomePage() {
+  // user?.id flows into the dep arrays of load/loadAll so the grid refetches
+  // when someone logs in or out — each user's view is scoped server-side.
+  const { user } = useAuth()
   const [boards, setBoards] = useState([])
   const [allBoards, setAllBoards] = useState([]) // unfiltered — powers stats + highlights
   const [loading, setLoading] = useState(true)
@@ -45,7 +49,7 @@ export default function HomePage() {
     } finally {
       setLoading(false)
     }
-  }, [activeFilter, searchQuery])
+  }, [activeFilter, searchQuery, user?.id])
 
   // Unfiltered snapshot for hero stats + highlighted strip.
   const loadAll = useCallback(async () => {
@@ -54,7 +58,7 @@ export default function HomePage() {
     } catch {
       /* stats are best-effort; the grid surfaces real errors */
     }
-  }, [])
+  }, [user?.id])
 
   useEffect(() => { load() }, [load])
   useEffect(() => { loadAll() }, [loadAll])

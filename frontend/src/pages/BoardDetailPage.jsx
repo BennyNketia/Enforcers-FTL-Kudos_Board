@@ -5,6 +5,7 @@ import CardGrid from '../components/CardGrid.jsx'
 import CreateCardModal from '../components/CreateCardModal.jsx'
 import EmptyState from '../components/EmptyState.jsx'
 import { api } from '../lib/api.js'
+import { useAuth } from '../hooks/useAuth.js'
 import './BoardDetailPage.css'
 
 // Pinned first (newest pin first), then unpinned by newest created.
@@ -18,6 +19,10 @@ function sortCards(cards) {
 
 export default function BoardDetailPage() {
   const { boardId } = useParams()
+  // Refetch when auth changes — a guest viewing the admin's board should re-
+  // resolve to a 404 if they sign in as someone who doesn't own it, and vice
+  // versa.
+  const { user } = useAuth()
   const [board, setBoard] = useState(null)
   const [cards, setCards] = useState([])
   const [loading, setLoading] = useState(true)
@@ -36,7 +41,7 @@ export default function BoardDetailPage() {
     } finally {
       setLoading(false)
     }
-  }, [boardId])
+  }, [boardId, user?.id])
 
   useEffect(() => {
     load()

@@ -1,5 +1,9 @@
 // Cards controllers — planning.md §2.2.
 //
+// Ownership: cards inherit the parent board's owner. Reads obey the same
+// scope as boards (guests see admin boards' cards; signed-in users see only
+// their own). Writes require auth AND that req.userId owns the board.
+//
 // Ordering invariant (planning.md §5): pinned cards first by `pinnedAt` desc,
 // then unpinned by `createdAt` desc. SQL `ORDER BY pinned DESC, pinnedAt DESC NULLS LAST,
 // createdAt DESC` gives that in one query.
@@ -14,39 +18,55 @@ const ORDER = [
   { createdAt: 'desc' },
 ]
 
-// Throws 404 if the parent board is missing. Used by every /boards/:boardId/cards route.
-async function assertBoardExists(boardId) {
-  const exists = await prisma.board.findUnique({ where: { id: boardId }, select: { id: true } })
-  if (!exists) {
-    const err = new Error('Board not found.')
-    err.status = 404
-    throw err
-  }
+// Returns the board if the caller may READ it (guest → must be admin's;
+// signed in → must be theirs). Throws 404 otherwise so a foreign board id
+// is indistinguishable from a missing one (no leaking existence).
+async function findReadableBoard(req, boardId) {
+  const board = await prisma.board.findUnique({
+    where: { id: boardId },
+    select: { id: true, userId: true, user: { select: { isAdmin: true } } },
+  })
+  if (!board) return null
+  if (req.userId) return board.userId === req.userId ? board : null
+  return board.user?.isAdmin ? board : null
+}
+
+// Returns the board if the caller OWNS it. Used for any mutation.
+async function findOwnedBoard(userId, boardId) {
+  if (!userId) return null
+  const board = await prisma.board.findFirst({
+    where: { id: boardId, userId },
+    select: { id: true },
+  })
+  return board
 }
 
 // GET /api/boards/:boardId/cards
 export async function listCards(req, res, next) {
   try {
-    await assertBoardExists(req.params.boardId)
+    const board = await findReadableBoard(req, req.params.boardId)
+    if (!board) return res.status(404).json({ error: 'Board not found.' })
+
     const cards = await prisma.card.findMany({
-      where: { boardId: req.params.boardId },
+      where: { boardId: board.id },
       orderBy: ORDER,
     })
     res.json(cards.map(serializeCard))
   } catch (err) {
-    if (err.status === 404) return res.status(404).json({ error: err.message })
     next(err)
   }
 }
 
-// POST /api/boards/:boardId/cards
+// POST /api/boards/:boardId/cards   (auth required by route)
 export async function createCard(req, res, next) {
   try {
-    await assertBoardExists(req.params.boardId)
+    const board = await findOwnedBoard(req.userId, req.params.boardId)
+    if (!board) return res.status(404).json({ error: 'Board not found.' })
+
     const { message, gifUrl, author } = req.body
     const card = await prisma.card.create({
       data: {
-        boardId: req.params.boardId,
+        boardId: board.id,
         message: message.trim(),
         gifUrl: gifUrl.trim(),
         author: author?.trim() || null,
@@ -54,15 +74,17 @@ export async function createCard(req, res, next) {
     })
     res.status(201).json(serializeCard(card))
   } catch (err) {
-    if (err.status === 404) return res.status(404).json({ error: err.message })
     next(err)
   }
 }
 
-// DELETE /api/boards/:boardId/cards/:cardId
+// DELETE /api/boards/:boardId/cards/:cardId   (auth required)
 export async function deleteCard(req, res, next) {
   try {
     const { boardId, cardId } = req.params
+    const board = await findOwnedBoard(req.userId, boardId)
+    if (!board) return res.status(404).json({ error: 'Card not found.' })
+
     const result = await prisma.card.deleteMany({ where: { id: cardId, boardId } })
     if (result.count === 0) return res.status(404).json({ error: 'Card not found.' })
     res.status(204).end()
@@ -71,10 +93,13 @@ export async function deleteCard(req, res, next) {
   }
 }
 
-// PATCH /api/boards/:boardId/cards/:cardId/upvote  → +1
+// PATCH /api/boards/:boardId/cards/:cardId/upvote  → +1   (auth required)
 export async function upvoteCard(req, res, next) {
   try {
     const { boardId, cardId } = req.params
+    const board = await findOwnedBoard(req.userId, boardId)
+    if (!board) return res.status(404).json({ error: 'Card not found.' })
+
     const existing = await prisma.card.findFirst({
       where: { id: cardId, boardId },
       select: { id: true },
@@ -91,11 +116,14 @@ export async function upvoteCard(req, res, next) {
   }
 }
 
-// PATCH /api/boards/:boardId/cards/:cardId/pin  body: { pinned: boolean }
+// PATCH /api/boards/:boardId/cards/:cardId/pin  body: { pinned: boolean }   (auth required)
 export async function pinCard(req, res, next) {
   try {
     const { boardId, cardId } = req.params
     const { pinned } = req.body
+    const board = await findOwnedBoard(req.userId, boardId)
+    if (!board) return res.status(404).json({ error: 'Card not found.' })
+
     const existing = await prisma.card.findFirst({
       where: { id: cardId, boardId },
       select: { id: true },

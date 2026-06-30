@@ -21,6 +21,16 @@ const client = axios.create({
   headers: { 'Content-Type': 'application/json' },
 })
 
+// Attach the JWT (set by lib/auth.js on login) so the backend can scope
+// requests to the current user. Read on each request so logout / login takes
+// effect immediately without rebuilding the axios instance.
+const TOKEN_KEY = 'kudos-auth-token'
+client.interceptors.request.use((config) => {
+  const token = localStorage.getItem(TOKEN_KEY)
+  if (token) config.headers.Authorization = `Bearer ${token}`
+  return config
+})
+
 const BOARDS_KEY = 'kudos-boards'
 const CARDS_KEY = 'kudos-cards'
 
