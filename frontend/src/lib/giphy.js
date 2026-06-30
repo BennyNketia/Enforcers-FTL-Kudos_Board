@@ -19,19 +19,23 @@ const DEMO_GIFS = [
   { id: 'd6', url: 'https://media.giphy.com/media/111ebonMs90YLu/giphy.gif', previewUrl: 'https://media.giphy.com/media/111ebonMs90YLu/200w.gif' },
 ]
 
-export async function searchGifs(query, limit = 12) {
+export async function searchGifs(query, limit = 24) {
   const q = query.trim()
-  if (!q) return DEMO_GIFS
 
   try {
     if (USE_API) {
-      const res = await fetch(`${API_BASE}/giphy/search?q=${encodeURIComponent(q)}&limit=${limit}`)
+      // Empty query → omit `q`; the proxy returns trending GIFs in that case.
+      const qs = q ? `q=${encodeURIComponent(q)}&limit=${limit}` : `limit=${limit}`
+      const res = await fetch(`${API_BASE}/giphy/search?${qs}`)
       if (!res.ok) throw new Error('proxy failed')
       const data = await res.json()
       return data.gifs ?? []
     }
 
-    const url = `https://api.giphy.com/v1/gifs/search?api_key=${PUBLIC_KEY}&q=${encodeURIComponent(q)}&limit=${limit}&rating=pg`
+    // No query → show trending GIFs (a full grid) instead of a search.
+    const url = q
+      ? `https://api.giphy.com/v1/gifs/search?api_key=${PUBLIC_KEY}&q=${encodeURIComponent(q)}&limit=${limit}&rating=pg`
+      : `https://api.giphy.com/v1/gifs/trending?api_key=${PUBLIC_KEY}&limit=${limit}&rating=pg`
     const res = await fetch(url)
     if (!res.ok) throw new Error('giphy failed')
     const data = await res.json()

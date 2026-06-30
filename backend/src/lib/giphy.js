@@ -8,6 +8,7 @@
 // ============================================================================
 
 const GIPHY_SEARCH_URL = 'https://api.giphy.com/v1/gifs/search'
+const GIPHY_TRENDING_URL = 'https://api.giphy.com/v1/gifs/trending'
 const REQUEST_TIMEOUT_MS = 10_000
 
 // Thrown when no GIPHY key is set. The route layer turns this into a clean 500
@@ -24,30 +25,34 @@ export function isConfigured() {
 }
 
 /**
- * Search GIPHY and return a compact list of GIFs.
- * @param {string} query   search terms
+ * Fetch GIFs from GIPHY. With a query, searches; without one, returns trending
+ * (so the picker shows a full grid on open instead of an empty result).
+ * @param {string} [query] search terms; empty/blank → trending
  * @param {number} [limit] how many results (1–50)
  * @returns {Promise<Array<{ id: string, url: string, previewUrl: string }>>}
  */
-export async function searchGifs(query, limit = 12) {
+export async function searchGifs(query = '', limit = 24) {
   if (!isConfigured()) throw new GiphyNotConfiguredError()
 
   // Clamp limit to GIPHY's accepted range so a bad query param can't break the call.
-  const safeLimit = Math.min(Math.max(Number(limit) || 12, 1), 50)
+  const safeLimit = Math.min(Math.max(Number(limit) || 24, 1), 50)
+  const q = (query || '').trim()
 
   // URLSearchParams handles encoding (spaces, &, etc.) so we don't build URLs by hand.
   const params = new URLSearchParams({
     api_key: process.env.GIPHY_API_KEY,
-    q: query,
     limit: String(safeLimit),
     rating: 'pg',
   })
+  // Search needs the term; trending takes no `q`.
+  const base = q ? GIPHY_SEARCH_URL : GIPHY_TRENDING_URL
+  if (q) params.set('q', q)
 
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
 
   try {
-    const res = await fetch(`${GIPHY_SEARCH_URL}?${params}`, { signal: controller.signal })
+    const res = await fetch(`${base}?${params}`, { signal: controller.signal })
     if (!res.ok) {
       const detail = await res.text().catch(() => '')
       const err = new Error(`GIPHY responded ${res.status}: ${detail.slice(0, 200)}`)
