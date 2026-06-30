@@ -7,13 +7,11 @@
 import { searchGifs } from '../lib/giphy.js'
 
 // GET /api/giphy/search?q&limit
+// No `q` → the lib returns trending GIFs, so the picker shows a full grid on open.
 export async function search(req, res, next) {
   try {
-    const q = (req.query.q || '').trim()
-    if (!q) return res.status(400).json({ error: 'A search query (q) is required.' })
-
-    // The lib clamps `limit` to GIPHY's valid range, so we forward it as-is.
-    const gifs = await searchGifs(q, req.query.limit)
+    // The lib trims `q` and clamps `limit`, so we forward both as-is.
+    const gifs = await searchGifs(req.query.q, req.query.limit)
     res.json({ gifs })
   } catch (err) {
     next(err)
