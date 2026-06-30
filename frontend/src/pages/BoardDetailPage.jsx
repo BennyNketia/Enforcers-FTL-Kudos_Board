@@ -21,8 +21,9 @@ export default function BoardDetailPage() {
   const { boardId } = useParams()
   // Refetch when auth changes — a guest viewing the admin's board should re-
   // resolve to a 404 if they sign in as someone who doesn't own it, and vice
-  // versa.
-  const { user } = useAuth()
+  // versa. requireAuth gates any mutation (add/delete/upvote/pin) behind a
+  // sign-in prompt for guests.
+  const { user, requireAuth } = useAuth()
   const [board, setBoard] = useState(null)
   const [cards, setCards] = useState([])
   const [loading, setLoading] = useState(true)
@@ -47,44 +48,57 @@ export default function BoardDetailPage() {
     load()
   }, [load])
 
+  // The CreateCardModal calls handleCreate after its own form submit, so it
+  // only opens when a signed-in user clicks Add — the modal-open path is
+  // gated below in openAdd().
   async function handleCreate(data) {
     const created = await api.createCard(boardId, data)
     setCards((prev) => sortCards([created, ...prev]))
   }
 
-  async function handleDelete(id) {
-    const prev = cards
-    setCards((c) => c.filter((x) => x.id !== id))
-    try {
-      await api.deleteCard(boardId, id)
-    } catch {
-      setCards(prev)
-    }
+  function openAdd() {
+    requireAuth(() => setIsAddOpen(true))
   }
 
-  async function handleUpvote(id) {
-    // optimistic +1
-    setCards((c) => c.map((x) => (x.id === id ? { ...x, upvotes: x.upvotes + 1 } : x)))
-    try {
-      const updated = await api.upvoteCard(boardId, id)
-      setCards((c) => c.map((x) => (x.id === id ? updated : x)))
-    } catch {
-      setCards((c) => c.map((x) => (x.id === id ? { ...x, upvotes: x.upvotes - 1 } : x)))
-    }
+  function handleDelete(id) {
+    requireAuth(async () => {
+      const prev = cards
+      setCards((c) => c.filter((x) => x.id !== id))
+      try {
+        await api.deleteCard(boardId, id)
+      } catch {
+        setCards(prev)
+      }
+    })
   }
 
-  async function handlePin(id, pinned) {
-    const prev = cards
-    // optimistic: apply + re-sort so it floats up / drops back immediately
-    setCards((c) =>
-      sortCards(c.map((x) => (x.id === id ? { ...x, pinned, pinnedAt: pinned ? Date.now() : null } : x))),
-    )
-    try {
-      const updated = await api.pinCard(boardId, id, pinned)
-      setCards((c) => sortCards(c.map((x) => (x.id === id ? updated : x))))
-    } catch {
-      setCards(prev)
-    }
+  function handleUpvote(id) {
+    requireAuth(async () => {
+      // optimistic +1
+      setCards((c) => c.map((x) => (x.id === id ? { ...x, upvotes: x.upvotes + 1 } : x)))
+      try {
+        const updated = await api.upvoteCard(boardId, id)
+        setCards((c) => c.map((x) => (x.id === id ? updated : x)))
+      } catch {
+        setCards((c) => c.map((x) => (x.id === id ? { ...x, upvotes: x.upvotes - 1 } : x)))
+      }
+    })
+  }
+
+  function handlePin(id, pinned) {
+    requireAuth(async () => {
+      const prev = cards
+      // optimistic: apply + re-sort so it floats up / drops back immediately
+      setCards((c) =>
+        sortCards(c.map((x) => (x.id === id ? { ...x, pinned, pinnedAt: pinned ? Date.now() : null } : x))),
+      )
+      try {
+        const updated = await api.pinCard(boardId, id, pinned)
+        setCards((c) => sortCards(c.map((x) => (x.id === id ? updated : x))))
+      } catch {
+        setCards(prev)
+      }
+    })
   }
 
   if (error === 'notfound') {
@@ -120,7 +134,7 @@ export default function BoardDetailPage() {
 
   return (
     <>
-      <BoardDetailHeader board={board} cardCount={cards.length} onAddCard={() => setIsAddOpen(true)} />
+      <BoardDetailHeader board={board} cardCount={cards.length} onAddCard={openAdd} />
       <div className="container board-detail">
         <CardGrid
           cards={cards}
@@ -128,7 +142,7 @@ export default function BoardDetailPage() {
           onDeleteCard={handleDelete}
           onUpvote={handleUpvote}
           onPin={handlePin}
-          onAddCard={() => setIsAddOpen(true)}
+          onAddCard={openAdd}
         />
       </div>
 

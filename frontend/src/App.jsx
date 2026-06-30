@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import { useTheme } from './hooks/useTheme.js'
 import { useAuth } from './hooks/useAuth.js'
@@ -10,12 +9,10 @@ import BoardDetailPage from './pages/BoardDetailPage.jsx'
 
 export default function App() {
   const { theme, toggleTheme } = useTheme()
-  const { user, setUser, logout } = useAuth()
-
-  // Auth modal lives at the app root so it can be opened from anywhere (Header).
-  const [authModal, setAuthModal] = useState({ open: false, mode: 'login' })
-  const openAuth = (mode = 'login') => setAuthModal({ open: true, mode })
-  const closeAuth = () => setAuthModal((s) => ({ ...s, open: false }))
+  // The modal lives at the app root, but its open state + queued post-login
+  // action are owned by AuthProvider so any nested component can call
+  // requireAuth() to gate a mutation behind sign-in.
+  const { user, logout, authModal, openAuth, closeAuth, setUser } = useAuth()
 
   return (
     <>

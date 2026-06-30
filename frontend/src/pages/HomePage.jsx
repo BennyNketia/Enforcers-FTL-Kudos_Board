@@ -16,7 +16,8 @@ const WEEK = 7 * 24 * 60 * 60 * 1000
 export default function HomePage() {
   // user?.id flows into the dep arrays of load/loadAll so the grid refetches
   // when someone logs in or out — each user's view is scoped server-side.
-  const { user } = useAuth()
+  // requireAuth gates create/delete actions behind a sign-in prompt for guests.
+  const { user, requireAuth } = useAuth()
   const [boards, setBoards] = useState([])
   const [allBoards, setAllBoards] = useState([]) // unfiltered — powers stats + highlights
   const [loading, setLoading] = useState(true)
@@ -27,15 +28,15 @@ export default function HomePage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const allBoardsRef = useRef(null)
 
-  // Header / hero "Create" deep-links here with ?new=1 — open the modal once,
+  // Header / hero "Create" deep-links here with ?new=1 — gate behind auth,
   // then strip the param so a refresh doesn't reopen it.
   useEffect(() => {
     if (searchParams.get('new') === '1') {
-      setIsCreateOpen(true)
+      requireAuth(() => setIsCreateOpen(true))
       searchParams.delete('new')
       setSearchParams(searchParams, { replace: true })
     }
-  }, [searchParams, setSearchParams])
+  }, [searchParams, setSearchParams, requireAuth])
 
   // Main grid: server-side filter + search.
   const load = useCallback(async () => {
@@ -82,17 +83,25 @@ export default function HomePage() {
     setAllBoards((prev) => [created, ...prev])
   }
 
-  async function handleDelete(id) {
-    const prev = boards
-    const prevAll = allBoards
-    setBoards((b) => b.filter((x) => x.id !== id)) // optimistic
-    setAllBoards((b) => b.filter((x) => x.id !== id))
-    try {
-      await api.deleteBoard(id)
-    } catch {
-      setBoards(prev)
-      setAllBoards(prevAll)
-    }
+  function handleDelete(id) {
+    requireAuth(async () => {
+      const prev = boards
+      const prevAll = allBoards
+      setBoards((b) => b.filter((x) => x.id !== id)) // optimistic
+      setAllBoards((b) => b.filter((x) => x.id !== id))
+      try {
+        await api.deleteBoard(id)
+      } catch {
+        setBoards(prev)
+        setAllBoards(prevAll)
+      }
+    })
+  }
+
+  // Open the create-board modal only if signed in; guests get the auth modal
+  // instead, and the create modal pops automatically after they sign in.
+  function openCreate() {
+    requireAuth(() => setIsCreateOpen(true))
   }
 
   function scrollToBoards() {
@@ -109,11 +118,11 @@ export default function HomePage() {
 
   return (
     <>
-      <Hero stats={stats} loading={loading && allBoards.length === 0} onPrimary={() => setIsCreateOpen(true)} />
+      <Hero stats={stats} loading={loading && allBoards.length === 0} onPrimary={openCreate} />
 
       <div className="container home stack">
         <QuickActions
-          onCreate={() => setIsCreateOpen(true)}
+          onCreate={openCreate}
           onBrowseInspiration={() => jumpToFilter('inspiration')}
           onViewRecent={() => jumpToFilter('recent')}
         />
@@ -126,7 +135,7 @@ export default function HomePage() {
               <h2 className="section-head__title t-h2">All boards</h2>
               <p className="section-head__sub t-body-md">Filter by category or search by title.</p>
             </div>
-            <button className="ui-btn ui-btn--primary ui-btn--sm home__new" onClick={() => setIsCreateOpen(true)}>
+            <button className="ui-btn ui-btn--primary ui-btn--sm home__new" onClick={openCreate}>
               + New board
             </button>
           </div>
@@ -146,7 +155,7 @@ export default function HomePage() {
             boards={boards}
             loading={loading}
             onDeleteBoard={handleDelete}
-            onCreateBoard={() => setIsCreateOpen(true)}
+            onCreateBoard={openCreate}
             isFiltered={isFiltered}
           />
         </section>
