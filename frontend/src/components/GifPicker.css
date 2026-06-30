@@ -81,7 +81,7 @@
 
 .gif-picker__grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: var(--space-2);
   /* max-height (not a fixed height): rows size to the square items and the
      container scrolls past ~2 rows. A fixed height makes the grid distribute
