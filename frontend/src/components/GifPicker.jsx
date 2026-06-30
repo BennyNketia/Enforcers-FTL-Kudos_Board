@@ -60,10 +60,18 @@ export default function GifPicker({ onSelect, selectedUrl, message = '' }) {
     runSearch(term)
   }
 
-  function handleSubmit(e) {
-    e.preventDefault()
-    clearTimeout(debounce.current)
-    runSearch(query)
+  // Enter inside the search input runs the search immediately. We deliberately
+  // don't wrap the input in its own <form>: this picker is rendered inside the
+  // CreateCardModal's <form>, and nested forms are invalid HTML — the browser
+  // strips the inner one, so onSubmit silently no-ops and Enter ends up
+  // submitting the outer form (or doing a default GET that lands on /boards/x?
+  // and 404s).
+  function handleKeyDown(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      clearTimeout(debounce.current)
+      runSearch(query)
+    }
   }
 
   const showEmpty = status === 'results' && results.length === 0
@@ -97,18 +105,19 @@ export default function GifPicker({ onSelect, selectedUrl, message = '' }) {
         </div>
       )}
 
-      <form className="gif-picker__search" onSubmit={handleSubmit}>
+      <div className="gif-picker__search">
         <span className="gif-picker__search-icon" aria-hidden><SearchIcon width="18" height="18" /></span>
         <input
           className="gif-picker__input"
           type="text"
           value={query}
           onChange={handleChange}
+          onKeyDown={handleKeyDown}
           placeholder="Search GIPHY…"
           aria-label="Search GIFs"
         />
         {status === 'searching' && <span className="spinner gif-picker__spinner" aria-label="Searching" />}
-      </form>
+      </div>
 
       <div className="gif-picker__grid" role="listbox" aria-label="GIF results">
         {status === 'error' && (
