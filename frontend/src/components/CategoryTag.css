@@ -1,10 +1,12 @@
 .category-tag {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 5px 11px;
+  gap: 5px;
+  padding: 5px 10px;
   border-radius: var(--radius-full);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  /* Sits on photos — a thin translucent ring reads cleaner than a drop shadow,
+     which looked like a stock UI-kit badge. */
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22);
   white-space: nowrap;
 }
 

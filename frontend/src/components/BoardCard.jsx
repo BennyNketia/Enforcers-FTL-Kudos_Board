@@ -51,12 +51,6 @@ export default function BoardCard({
         <div className="board-card__overlay" aria-hidden />
         <div className="board-card__media-top">
           <CategoryTag category={category} />
-          {typeof cardCount === 'number' && (
-            <span className="board-card__count">
-              <LayersIcon width="13" height="13" />
-              {cardCount}
-            </span>
-          )}
         </div>
         {isOwner && (
           <button
@@ -75,6 +69,12 @@ export default function BoardCard({
         <div className="board-card__meta">
           <span className="avatar board-card__avatar" aria-hidden>{initialOf(author)}</span>
           <span className="board-card__author t-body-sm">{author ? author : 'Anonymous'}</span>
+          {typeof cardCount === 'number' && (
+            <span className="board-card__count t-body-sm">
+              <LayersIcon width="14" height="14" />
+              {cardCount} {cardCount === 1 ? 'card' : 'cards'}
+            </span>
+          )}
         </div>
       </div>
     </article>
