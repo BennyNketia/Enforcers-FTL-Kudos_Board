@@ -1,14 +1,18 @@
 // ============================================================================
-// One-off backfill: create (or update) the admin user and assign all
-// userId-less boards to it. Run AFTER migration A (which made Board.userId
-// nullable) and BEFORE migration B (which makes it NOT NULL).
+// One-off backfill. Two jobs:
+//   1. Create (or update) the admin user; assign any userId-less Board rows
+//      to it. Used after the first board-owner migration.
+//   2. Stamp every userId-less Card with its parent board's userId. Used
+//      after the card-owner migration adds a nullable Card.userId.
+//
+// Run AFTER each nullable-add migration and BEFORE the corresponding NOT NULL
+// tightening migration.
 //
 //   node scripts/assign-admin.js
 //
-// Reads ADMIN_USERNAME / ADMIN_PASSWORD from backend/.env. Idempotent — running
-// twice does not duplicate the admin or re-stamp boards that already have an
-// owner. Uses the same bcrypt hashing as the signup endpoint so the admin can
-// sign in through the normal /api/auth/login flow.
+// Reads ADMIN_USERNAME / ADMIN_PASSWORD from backend/.env. Idempotent — re-
+// running won't duplicate the admin, won't re-stamp boards or cards that
+// already have an owner, and won't overwrite a rotated password.
 // ============================================================================
 
 import 'dotenv/config'
@@ -41,14 +45,26 @@ async function main() {
 
   console.log(`admin user ${admin.username} (${admin.id}) — isAdmin=${admin.isAdmin}`)
 
-  // Use raw SQL: after migration B regenerates the client locally, Prisma's
-  // typed updateMany no longer accepts `userId: null` as a filter — but the
-  // prod column is still nullable until migration B replays, so we *need* to
-  // match nulls. $executeRaw bypasses the client-side check.
-  const count = await prisma.$executeRaw`
+  // Use raw SQL: after the NOT NULL tightening migration regenerates the
+  // client, Prisma's typed updateMany no longer accepts `userId: null` as a
+  // filter — but the prod column is still nullable until that migration
+  // replays, so we *need* to match nulls. $executeRaw bypasses the check.
+  const boardsCount = await prisma.$executeRaw`
     UPDATE "Board" SET "userId" = ${admin.id} WHERE "userId" IS NULL
   `
-  console.log(`assigned ${count} legacy board(s) to admin`)
+  console.log(`assigned ${boardsCount} legacy board(s) to admin`)
+
+  // Inherit the parent board's owner for each unowned card. After
+  // `add_board_owner` ran, every board has a userId; this is the natural
+  // continuation for cards.
+  const cardsCount = await prisma.$executeRaw`
+    UPDATE "Card"
+       SET "userId" = "Board"."userId"
+      FROM "Board"
+     WHERE "Card"."boardId" = "Board"."id"
+       AND "Card"."userId" IS NULL
+  `
+  console.log(`stamped ${cardsCount} legacy card(s) with their board's owner`)
 }
 
 main()

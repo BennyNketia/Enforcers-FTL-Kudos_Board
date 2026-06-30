@@ -1,12 +1,14 @@
 // Serializers for the wire format the frontend expects (planning.md Appendix B):
 //   - createdAt / pinnedAt are epoch-millis NUMBERS, not ISO strings
 //   - Board carries a derived `cardCount` from Prisma's `_count`
+//   - Both Board and Card carry a derived `isOwner` boolean so the frontend
+//     can hide delete buttons without leaking the row's userId
 //
 // Queries that include Board.cardCount should select `_count: { select: { cards: true } }`.
 
 const ms = (d) => (d ? d.getTime() : null)
 
-export function serializeBoard(board) {
+export function serializeBoard(board, currentUserId) {
   const cardCount = board._count?.cards ?? board.cardCount ?? 0
   return {
     id: board.id,
@@ -16,10 +18,11 @@ export function serializeBoard(board) {
     author: board.author,
     createdAt: ms(board.createdAt),
     cardCount,
+    isOwner: Boolean(currentUserId && board.userId === currentUserId),
   }
 }
 
-export function serializeCard(card) {
+export function serializeCard(card, currentUserId) {
   return {
     id: card.id,
     boardId: card.boardId,
@@ -30,5 +33,6 @@ export function serializeCard(card) {
     pinned: card.pinned,
     pinnedAt: ms(card.pinnedAt),
     createdAt: ms(card.createdAt),
+    isOwner: Boolean(currentUserId && card.userId === currentUserId),
   }
 }

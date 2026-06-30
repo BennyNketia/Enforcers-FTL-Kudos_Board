@@ -1,10 +1,9 @@
 // Boards controllers — planning.md §2.1.
 //
-// Ownership model: every board belongs to a user. Listing/reading scope:
-//   - signed in  → only the requester's own boards
-//   - guest      → only the admin user's boards (acts as a public showcase)
-// Mutations (create/delete) always require auth and only touch the caller's
-// boards. Card mutations live in cardsController and share assertBoardAccess.
+// Visibility model: every board is globally readable. Mutations require auth;
+// only the board's creator may delete it (card-level rules live in
+// cardsController). Each serialized board carries an `isOwner` flag derived
+// from req.userId so the frontend can hide the delete button for non-owners.
 //
 // Wire format: `cardCount` is derived (Prisma _count); createdAt is epoch ms.
 // Errors flow through next(err) to the central handler in src/index.js.
@@ -21,27 +20,13 @@ const DEFAULT_COVERS = {
 
 const COUNT_SELECT = { _count: { select: { cards: true } } }
 
-// Compute the ownership clause for a list/read query.
-//   signed in → boards owned by req.userId
-//   guest     → boards owned by the (single) admin user; empty result if none
-// Returned as a Prisma `where` fragment so callers can merge filters into it.
-async function ownerScope(req) {
-  if (req.userId) return { userId: req.userId }
-  const admin = await prisma.user.findFirst({
-    where: { isAdmin: true },
-    select: { id: true },
-  })
-  // No admin configured → guests see nothing rather than everything.
-  return { userId: admin?.id ?? '__no_admin__' }
-}
-
 // GET /api/boards?filter&search
 export async function listBoards(req, res, next) {
   try {
     const filter = req.query.filter || 'all'
     const search = (req.query.search || '').trim()
 
-    const where = { ...(await ownerScope(req)) }
+    const where = {}
     if (filter !== 'all' && filter !== 'recent') where.category = filter
     if (search) where.title = { contains: search, mode: 'insensitive' }
 
@@ -52,7 +37,7 @@ export async function listBoards(req, res, next) {
       include: COUNT_SELECT,
     })
 
-    res.json(boards.map(serializeBoard))
+    res.json(boards.map((b) => serializeBoard(b, req.userId)))
   } catch (err) {
     next(err)
   }
@@ -61,12 +46,12 @@ export async function listBoards(req, res, next) {
 // GET /api/boards/:boardId
 export async function getBoard(req, res, next) {
   try {
-    const board = await prisma.board.findFirst({
-      where: { id: req.params.boardId, ...(await ownerScope(req)) },
+    const board = await prisma.board.findUnique({
+      where: { id: req.params.boardId },
       include: COUNT_SELECT,
     })
     if (!board) return res.status(404).json({ error: 'Board not found.' })
-    res.json(serializeBoard(board))
+    res.json(serializeBoard(board, req.userId))
   } catch (err) {
     next(err)
   }
@@ -86,20 +71,28 @@ export async function createBoard(req, res, next) {
       },
       include: COUNT_SELECT,
     })
-    res.status(201).json(serializeBoard(board))
+    res.status(201).json(serializeBoard(board, req.userId))
   } catch (err) {
     next(err)
   }
 }
 
 // DELETE /api/boards/:boardId  → 204, cascades to cards via schema.
-// Auth required; scoped to the caller's boards so users can't delete someone else's.
+// Auth required; only the board's creator may delete. Foreign deletes 403 so
+// the UI can show a useful error if it ever ends up here (it shouldn't —
+// non-owner clients hide the button).
 export async function deleteBoard(req, res, next) {
   try {
-    const result = await prisma.board.deleteMany({
-      where: { id: req.params.boardId, userId: req.userId },
+    const board = await prisma.board.findUnique({
+      where: { id: req.params.boardId },
+      select: { userId: true },
     })
-    if (result.count === 0) return res.status(404).json({ error: 'Board not found.' })
+    if (!board) return res.status(404).json({ error: 'Board not found.' })
+    if (board.userId !== req.userId) {
+      return res.status(403).json({ error: 'Only the creator can delete this board.' })
+    }
+
+    await prisma.board.delete({ where: { id: req.params.boardId } })
     res.status(204).end()
   } catch (err) {
     if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025') {

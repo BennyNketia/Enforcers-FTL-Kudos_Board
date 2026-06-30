@@ -26,6 +26,7 @@ model User {
   isAdmin      Boolean  @default(false)
   createdAt    DateTime @default(now())
   boards       Board[]
+  cards        Card[]
 }
 
 model Board {
@@ -46,6 +47,10 @@ model Card {
   id        String    @id @default(uuid())
   boardId   String
   board     Board     @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  // Card creator. Cascade so deleting a user wipes their cards along with
+  // their boards.
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   message   String
   gifUrl    String
   author    String?
@@ -55,4 +60,5 @@ model Card {
   createdAt DateTime  @default(now())
 
   @@index([boardId])
+  @@index([userId])
 }

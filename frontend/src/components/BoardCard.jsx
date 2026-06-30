@@ -20,6 +20,7 @@ export default function BoardCard({
   imageUrl,
   author,
   cardCount,
+  isOwner = false,
   onDelete,
   featured = false,
 }) {
@@ -57,14 +58,16 @@ export default function BoardCard({
             </span>
           )}
         </div>
-        <button
-          className="board-card__delete"
-          onClick={handleDelete}
-          aria-label={`Delete board ${title}`}
-          title="Delete board"
-        >
-          <TrashIcon width="17" height="17" />
-        </button>
+        {isOwner && (
+          <button
+            className="board-card__delete"
+            onClick={handleDelete}
+            aria-label={`Delete board ${title}`}
+            title="Delete board"
+          >
+            <TrashIcon width="17" height="17" />
+          </button>
+        )}
       </div>
 
       <div className="board-card__body">

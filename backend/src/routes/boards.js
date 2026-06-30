@@ -1,9 +1,11 @@
 // Boards + per-board cards routes — mounted at /api/boards (see src/index.js).
 //
-// Ownership scoping (see boardsController.ownerScope):
-//   - Reads use optionalAuth: signed-in users see only their own boards;
-//     guests see the admin user's boards as a public showcase.
+// Access model:
+//   - Reads are global (everyone sees everything). optionalAuth still runs
+//     so the serializer can stamp `isOwner` for the caller — used by the
+//     frontend to hide delete buttons on rows the user doesn't own.
 //   - All mutations require authenticate (no anonymous writes).
+//   - Delete checks live in the controllers: only the creator may delete.
 import { Router } from 'express'
 
 import {

@@ -16,6 +16,7 @@ export default function KudoCard({
   author,
   upvotes,
   pinned,
+  isOwner = false,
   onUpvote,
   onPin,
   onDelete,
@@ -62,14 +63,16 @@ export default function KudoCard({
           >
             <PinIcon filled={pinned} width="18" height="18" />
           </button>
-          <button
-            className="kudo-card__icon-btn kudo-card__icon-btn--danger"
-            onClick={handleDelete}
-            aria-label="Delete card"
-            title="Delete"
-          >
-            <TrashIcon width="18" height="18" />
-          </button>
+          {isOwner && (
+            <button
+              className="kudo-card__icon-btn kudo-card__icon-btn--danger"
+              onClick={handleDelete}
+              aria-label="Delete card"
+              title="Delete"
+            >
+              <TrashIcon width="18" height="18" />
+            </button>
+          )}
         </div>
       </div>
     </article>
