@@ -35,7 +35,8 @@
   grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
   align-items: center;
   gap: var(--space-12);
-  padding-top: var(--space-16);
+  /* Clear the 72px sticky header so the copy never tucks under it. */
+  padding-top: var(--space-20);
   padding-bottom: var(--space-16);
 }
 
@@ -47,17 +48,17 @@
   min-width: 0; /* allow the column to shrink instead of forcing overflow */
 }
 
-.hero__eyebrow {
-  color: var(--primary);
-  background-color: color-mix(in srgb, var(--primary) 12%, transparent);
-  padding: 6px 12px;
-  border-radius: var(--radius-full);
-}
-
-.hero__headline {
+/* `.hero .hero__headline` (specificity 0,2,0) deliberately outranks the
+   `.t-display-xl` utility (0,1,0) the headline also carries — otherwise the
+   utility's fixed 3rem wins the cascade and the size below is ignored. */
+.hero .hero__headline {
   color: var(--text-primary);
   letter-spacing: -0.02em;
   margin: 0;
+  /* Fluid size so the headline fills its column on wide screens instead of
+     leaving a large blank gap to its right (base .t-display-xl is a fixed 3rem). */
+  font-size: clamp(3.5rem, 5.6vw, 5.75rem);
+  line-height: 1.03;
 }
 .hero__accent {
   background-image: var(--gradient-primary);
@@ -134,13 +135,13 @@
   .hero__inner {
     grid-template-columns: minmax(0, 1fr);
     gap: var(--space-8);
-    padding-top: var(--space-12);
+    padding-top: var(--space-16);
     padding-bottom: var(--space-12);
   }
 }
 
 @media (max-width: 640px) {
-  .hero__headline { font-size: 2.25rem; }
+  .hero .hero__headline { font-size: 2.5rem; }
   .hero__stats { gap: var(--space-2); }
   .stat-card { padding: var(--space-3); gap: var(--space-1); }
   .stat-card__icon { width: 32px; height: 32px; }

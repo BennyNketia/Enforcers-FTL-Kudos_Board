@@ -151,16 +151,21 @@
 }
 
 [data-theme="dark"] {
-  /* --- Base surface tokens (dark) — layered: bg deepest → surface → elevated --- */
-  --background: #0E0E13;
-  --foreground: #F1F0F7;
-  --surface: #17171F;
-  --surface-hover: #25252F;
-  --border: #2C2B38;
-  --muted-text: #9C9AB8;
+  /* --- Base surface tokens (dark) — layered so each step is visibly distinct:
+     background (deepest) → surface → surface-elevated. The old scale packed
+     bg/surface/border within ~20 levels of lightness so cards dissolved into
+     the page; these steps are spaced wider and tinted a touch blue/cool. --- */
+  --background: #0B0B11;
+  --foreground: #F3F2F9;
+  --surface: #1B1B26;
+  --surface-hover: #2A2A38;
+  /* Borders carry the separation in dark mode (shadows barely read on near-black),
+     so this is intentionally lighter than the surface it sits on. */
+  --border: #3A3947;
+  --muted-text: #A2A0BE;
   /* Brighter than --muted-text so secondary copy clears AA on dark surfaces. */
-  --text-secondary: #B8B6CF;
-  --input-bg: #20202B;
+  --text-secondary: #C3C1DA;
+  --input-bg: #23232F;
 
   /* --- Category: celebration (dark) --- */
   --celebration-accent-soft: #3D1A24;
@@ -194,7 +199,10 @@
 
   /* --- Dark overrides for the SaaS dashboard layer --- */
   /* surface-elevated reads brighter than surface so stacked panels separate. */
-  --surface-elevated: #20202B;
+  --surface-elevated: #2A2A3A;
+  /* Translucent surface (hero stat cards) — lift it well above the hero wash so
+     the cards read as solid panels, not faint outlines on the gradient. */
+  --surface-translucent: color-mix(in srgb, #2A2A3A 88%, transparent);
 
   --primary: #818CF8;
   --primary-hover: #A5B4FC;
