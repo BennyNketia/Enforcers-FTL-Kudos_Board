@@ -83,7 +83,10 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: var(--space-2);
-  height: 248px;
+  /* max-height (not a fixed height): rows size to the square items and the
+     container scrolls past ~2 rows. A fixed height makes the grid distribute
+     it across rows, squishing the squares into short rectangles. */
+  max-height: 360px;
   overflow-y: auto;
   padding: var(--space-1);
   background-color: var(--surface);
@@ -118,16 +121,24 @@
 
 .gif-picker__item {
   position: relative;
-  aspect-ratio: 1 / 1;
+  display: block;
+  width: 100%;
+  min-width: 0;
+  padding: 0;
   border-radius: var(--radius-sm);
   overflow: hidden;
   border: 2px solid transparent;
+  background: var(--input-bg);
   transition: transform var(--transition-fast), border-color var(--transition-fast),
     box-shadow var(--transition-fast);
 }
 .gif-picker__item img {
+  /* The IMAGE carries the square aspect-ratio and stays in normal flow, so it
+     gives the grid cell real height. A tall/wide GIF is cropped to the square
+     (object-fit: cover) instead of stretching the cell and overlapping others. */
+  display: block;
   width: 100%;
-  height: 100%;
+  aspect-ratio: 1 / 1;
   object-fit: cover;
 }
 .gif-picker__item:hover {
