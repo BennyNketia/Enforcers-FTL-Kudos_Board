@@ -22,30 +22,36 @@ const DEMO_GIFS = [
 export async function searchGifs(query, limit = 24) {
   const q = query.trim()
 
-  try {
-    if (USE_API) {
-      // Empty query → omit `q`; the proxy returns trending GIFs in that case.
-      const qs = q ? `q=${encodeURIComponent(q)}&limit=${limit}` : `limit=${limit}`
-      const res = await fetch(`${API_BASE}/giphy/search?${qs}`)
-      if (!res.ok) throw new Error('proxy failed')
-      const data = await res.json()
-      return data.gifs ?? []
-    }
-
-    // No query → show trending GIFs (a full grid) instead of a search.
-    const url = q
+  // Empty query → omit `q`; both the proxy and GIPHY's trending endpoint return
+  // a full grid in that case.
+  const url = USE_API
+    ? `${API_BASE}/giphy/search?${q ? `q=${encodeURIComponent(q)}&limit=${limit}` : `limit=${limit}`}`
+    : q
       ? `https://api.giphy.com/v1/gifs/search?api_key=${PUBLIC_KEY}&q=${encodeURIComponent(q)}&limit=${limit}&rating=pg`
       : `https://api.giphy.com/v1/gifs/trending?api_key=${PUBLIC_KEY}&limit=${limit}&rating=pg`
-    const res = await fetch(url)
-    if (!res.ok) throw new Error('giphy failed')
-    const data = await res.json()
-    return (data.data ?? []).map((g) => ({
-      id: g.id,
-      url: g.images?.original?.url,
-      previewUrl: g.images?.fixed_width?.url || g.images?.original?.url,
-    }))
+
+  let res
+  try {
+    res = await fetch(url)
   } catch {
-    // Offline / rate-limited: keep the picker usable with demo GIFs.
+    // Only a TRUE network failure (offline, server unreachable) lands here —
+    // fetch doesn't reject on 4xx/5xx. Keep the picker usable with demo GIFs.
     return DEMO_GIFS
   }
+
+  // A reached-but-failing endpoint (e.g. backend missing GIPHY_API_KEY → 500,
+  // or GIPHY rate-limiting → 429) must SURFACE, not masquerade as demo results.
+  // The GifPicker catches this and shows its error state.
+  if (!res.ok) {
+    const data = await res.json().catch(() => null)
+    throw new Error(data?.error || `GIF search failed (${res.status}).`)
+  }
+
+  const data = await res.json()
+  if (USE_API) return data.gifs ?? []
+  return (data.data ?? []).map((g) => ({
+    id: g.id,
+    url: g.images?.original?.url,
+    previewUrl: g.images?.fixed_width?.url || g.images?.original?.url,
+  }))
 }
