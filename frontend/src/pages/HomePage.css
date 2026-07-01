@@ -44,12 +44,6 @@
     align-items: stretch;
     gap: var(--space-3);
   }
-  /* Hide the redundant toolbar "New board" on small screens — create already
-     lives in the sticky header. Scoped with `.home` so it reliably overrides
-     the base `.ui-btn { display: inline-flex }` regardless of CSS load order. */
-  .home .home__new {
-    display: none;
-  }
 }
 
 /* Mobile: 28px section rhythm. */

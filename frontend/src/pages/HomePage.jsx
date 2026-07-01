@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import Hero from '../components/Hero.jsx'
-import QuickActions from '../components/QuickActions.jsx'
-import HighlightedBoards from '../components/HighlightedBoards.jsx'
 import FilterBar from '../components/FilterBar.jsx'
 import SearchBar from '../components/SearchBar.jsx'
 import BoardGrid from '../components/BoardGrid.jsx'
@@ -79,8 +77,6 @@ export default function HomePage() {
     }
   }, [allBoards])
 
-  const highlighted = useMemo(() => allBoards.slice(0, 3), [allBoards])
-
   async function handleCreate(data) {
     const created = await api.createBoard(data)
     // Match the server's filter to decide whether the new board should appear
@@ -116,16 +112,6 @@ export default function HomePage() {
     requireAuth(() => setIsCreateOpen(true))
   }
 
-  function scrollToBoards() {
-    allBoardsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }
-
-  function jumpToFilter(filter) {
-    setActiveFilter(filter)
-    setSearchQuery('')
-    scrollToBoards()
-  }
-
   const isFiltered = activeFilter !== 'all' || searchQuery.trim() !== ''
 
   return (
@@ -133,23 +119,12 @@ export default function HomePage() {
       <Hero stats={stats} loading={loading && allBoards.length === 0} onPrimary={openCreate} />
 
       <div className="container home stack">
-        <QuickActions
-          onCreate={openCreate}
-          onBrowseInspiration={() => jumpToFilter('inspiration')}
-          onViewRecent={() => jumpToFilter('recent')}
-        />
-
-        {!isFiltered && <HighlightedBoards boards={highlighted} onDeleteBoard={handleDelete} />}
-
         <section id="all-boards" className="home__all" ref={allBoardsRef}>
           <div className="section-head">
             <div className="section-head__titles">
               <h2 className="section-head__title t-h2">All boards</h2>
               <p className="section-head__sub t-body-md">Filter by category or search by title.</p>
             </div>
-            <button className="ui-btn ui-btn--primary ui-btn--sm home__new" onClick={openCreate}>
-              + New board
-            </button>
           </div>
 
           <div className="home__toolbar">
