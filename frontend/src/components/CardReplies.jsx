@@ -117,7 +117,7 @@ export default function CardReplies({ boardId, cardId, replyCount = 0, onCountCh
                 <div className="reply__head">
                   <span className="reply__author t-body-sm">{r.author ? r.author : 'Anonymous'}</span>
                 </div>
-                <p className="reply__message t-body-sm">{r.message}</p>
+                {r.message && <p className="reply__message t-body-sm">{r.message}</p>}
                 {r.gifUrl && (
                   <div className="reply__media">
                     <img src={r.gifUrl} alt="" loading="lazy" />

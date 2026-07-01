@@ -2,10 +2,11 @@ import { useState } from 'react'
 import GifPicker from './GifPicker.jsx'
 import { ImageIcon, CloseIcon } from './icons.jsx'
 
-// Inline composer for replying to a card. Message is required; a GIF is
-// optional and revealed on demand so the common text-only reply stays compact.
-// Rendered outside any parent <form>, so a real <form> + Enter-to-submit is safe
-// here (unlike GifPicker inside CreateCardModal).
+// Inline composer for replying to a card. Either a message OR a GIF is
+// required (a reply can be text-only, GIF-only, or both). The GIF picker is
+// revealed on demand so the common text-only reply stays compact. Rendered
+// outside any parent <form>, so a real <form> + Enter-to-submit is safe here
+// (unlike GifPicker inside CreateCardModal).
 export default function ReplyComposer({ onSubmit, onCancel }) {
   const [message, setMessage] = useState('')
   const [gifUrl, setGifUrl] = useState('')
@@ -14,7 +15,7 @@ export default function ReplyComposer({ onSubmit, onCancel }) {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
 
-  const canSubmit = message.trim() !== '' && !submitting
+  const canSubmit = (message.trim() !== '' || gifUrl !== '') && !submitting
 
   async function handleSubmit(e) {
     e.preventDefault()

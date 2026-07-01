@@ -42,7 +42,9 @@ export async function listReplies(req, res, next) {
 
 // POST /api/boards/:boardId/cards/:cardId/replies   (auth required by route)
 // Any signed-in user can reply to any card. The reply is stamped with the
-// caller's id so they (and only they) can delete it later. The GIF is optional.
+// caller's id so they (and only they) can delete it later. Either message or
+// gifUrl must be present (validator enforces this); a reply may be text-only,
+// GIF-only, or both.
 export async function createReply(req, res, next) {
   try {
     const { boardId, cardId } = req.params
@@ -52,7 +54,7 @@ export async function createReply(req, res, next) {
       data: {
         cardId,
         userId: req.userId,
-        message: message.trim(),
+        message: message?.trim() || '',
         gifUrl: gifUrl?.trim() || null,
         author: author?.trim() || null,
       },
