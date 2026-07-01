@@ -139,6 +139,7 @@ export default function BoardDetailPage() {
         <CardGrid
           cards={cards}
           loading={loading}
+          canPin={Boolean(board?.isOwner)}
           onDeleteCard={handleDelete}
           onUpvote={handleUpvote}
           onPin={handlePin}

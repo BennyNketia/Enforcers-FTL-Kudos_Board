@@ -4,7 +4,8 @@ import EmptyState from './EmptyState.jsx'
 import './Grid.css'
 
 // Grid of kudo cards. The parent passes cards already sorted (pinned first).
-export default function CardGrid({ cards, loading, onDeleteCard, onUpvote, onPin, onAddCard }) {
+// `canPin` is true only for the board's owner, who alone may pin/unpin cards.
+export default function CardGrid({ cards, loading, canPin = false, onDeleteCard, onUpvote, onPin, onAddCard }) {
   return (
     <div className="grid grid--cards">
       {loading ? (
@@ -19,7 +20,7 @@ export default function CardGrid({ cards, loading, onDeleteCard, onUpvote, onPin
         />
       ) : (
         cards.map((c) => (
-          <KudoCard key={c.id} {...c} onUpvote={onUpvote} onPin={onPin} onDelete={onDeleteCard} />
+          <KudoCard key={c.id} {...c} canPin={canPin} onUpvote={onUpvote} onPin={onPin} onDelete={onDeleteCard} />
         ))
       )}
     </div>

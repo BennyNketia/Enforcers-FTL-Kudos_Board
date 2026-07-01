@@ -1,0 +1,200 @@
+/* Threaded replies under a kudo card. Visible to everyone; the compose / like /
+   delete actions are gated behind sign-in by requireAuth() in CardReplies.jsx. */
+
+.card-replies {
+  border-top: 1px solid var(--border);
+  padding: var(--space-2) var(--space-4) var(--space-3);
+}
+
+/* The toggle shows the reply count (or "Reply" when empty). */
+.card-replies__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 4px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  transition: color var(--transition-fast);
+}
+.card-replies__toggle:hover {
+  color: var(--primary);
+}
+
+.card-replies__panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+  animation: fade-slide-up var(--transition-base) both;
+}
+
+.card-replies__status {
+  color: var(--muted-text);
+  padding: var(--space-1) 0;
+}
+
+/* "Add a reply" call-to-action shown when the composer is closed. */
+.card-replies__add {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: var(--radius-full);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--primary);
+  background-color: color-mix(in srgb, var(--primary) 8%, transparent);
+  transition: background-color var(--transition-fast);
+}
+.card-replies__add:hover {
+  background-color: color-mix(in srgb, var(--primary) 16%, transparent);
+}
+
+/* --- A single reply row -------------------------------------------------- */
+.reply {
+  display: flex;
+  gap: var(--space-2);
+}
+.reply__avatar {
+  width: 26px;
+  height: 26px;
+  font-size: 0.7rem;
+  margin-top: 2px;
+}
+.reply__body {
+  flex: 1;
+  min-width: 0;
+  background-color: var(--surface-hover);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+}
+.reply__author {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.reply__message {
+  color: var(--text-primary);
+  line-height: 1.5;
+  margin-top: 2px;
+  overflow-wrap: anywhere;
+}
+.reply__media {
+  margin-top: var(--space-2);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  max-width: 220px;
+}
+.reply__media img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.reply__footer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-top: var(--space-2);
+}
+.reply__like {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 8px;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--muted-text);
+  transition: color var(--transition-fast), background-color var(--transition-fast);
+}
+.reply__like:hover {
+  color: var(--danger);
+  background-color: var(--danger-soft);
+}
+.reply__delete {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-md);
+  color: var(--muted-text);
+  transition: color var(--transition-fast), background-color var(--transition-fast);
+}
+.reply__delete:hover {
+  color: var(--danger);
+  background-color: var(--danger-soft);
+}
+
+/* --- Composer ------------------------------------------------------------ */
+.reply-composer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.reply-composer__input {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  background-color: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  resize: vertical;
+  min-height: 56px;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+.reply-composer__author {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  background-color: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+.reply-composer__input::placeholder,
+.reply-composer__author::placeholder {
+  color: var(--muted-text);
+}
+.reply-composer__input:focus,
+.reply-composer__author:focus {
+  outline: none;
+  border-color: var(--primary);
+  background-color: var(--surface);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 22%, transparent);
+}
+
+.reply-composer__gif-toggle {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background-color: var(--surface-hover);
+  transition: color var(--transition-fast), background-color var(--transition-fast);
+}
+.reply-composer__gif-toggle:hover {
+  color: var(--primary);
+  background-color: var(--border);
+}
+
+.reply-composer__actions {
+  display: flex;
+  gap: var(--space-2);
+}
+/* Compact buttons for the inline composer. */
+.reply-composer__submit,
+.reply-composer .ui-btn {
+  height: 38px;
+  padding: 0 var(--space-4);
+  font-size: 0.8125rem;
+}

@@ -27,6 +27,7 @@ model User {
   createdAt    DateTime @default(now())
   boards       Board[]
   cards        Card[]
+  replies      Reply[]
 }
 
 model Board {
@@ -58,7 +59,25 @@ model Card {
   pinned    Boolean   @default(false)
   pinnedAt  DateTime?
   createdAt DateTime  @default(now())
+  replies   Reply[]
 
   @@index([boardId])
+  @@index([userId])
+}
+
+model Reply {
+  id        String   @id @default(uuid())
+  cardId    String
+  card      Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  // Reply author. Cascade so deleting a user wipes their replies too.
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  message   String
+  gifUrl    String? // optional — a reply can be text-only or carry its own GIF
+  author    String?
+  likes     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([cardId])
   @@index([userId])
 }

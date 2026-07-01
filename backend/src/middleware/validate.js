@@ -65,6 +65,25 @@ export function validateCreateCard(req, res, next) {
   next()
 }
 
+// POST /api/boards/:boardId/cards/:cardId/replies — message required; gifUrl optional.
+export function validateCreateReply(req, res, next) {
+  const body = req.body || {}
+  const details = {}
+
+  if (!isNonEmptyString(body.message)) details.message = 'Message is required.'
+  if (body.gifUrl !== undefined && body.gifUrl !== null && typeof body.gifUrl !== 'string') {
+    details.gifUrl = 'gifUrl must be a string.'
+  }
+  if (body.author !== undefined && body.author !== null && typeof body.author !== 'string') {
+    details.author = 'author must be a string.'
+  }
+
+  if (Object.keys(details).length) {
+    return res.status(400).json({ error: 'Invalid reply payload.', details })
+  }
+  next()
+}
+
 // PATCH /api/boards/:boardId/cards/:cardId/pin — `pinned` must be a boolean.
 export function validatePin(req, res, next) {
   const { pinned } = req.body || {}

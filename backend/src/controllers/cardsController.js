@@ -1,9 +1,10 @@
 // Cards controllers — planning.md §2.2.
 //
 // Visibility model: every card is globally readable. Mutations require auth.
-// Anyone signed in can create cards on any board, upvote, and pin; only the
-// card's creator may delete it. Each serialized card carries an `isOwner`
-// flag so the frontend can hide the delete button for non-owners.
+// Anyone signed in can create cards on any board and upvote; only the card's
+// creator may delete it, and only the board's owner may pin/unpin cards. Each
+// serialized card carries an `isOwner` flag so the frontend can hide the
+// delete button for non-owners.
 //
 // Ordering invariant (planning.md §5): pinned cards first by `pinnedAt` desc,
 // then unpinned by `createdAt` desc. SQL `ORDER BY pinned DESC, pinnedAt DESC NULLS LAST,
@@ -36,6 +37,7 @@ export async function listCards(req, res, next) {
     const cards = await prisma.card.findMany({
       where: { boardId: req.params.boardId },
       orderBy: ORDER,
+      include: { _count: { select: { replies: true } } },
     })
     res.json(cards.map((c) => serializeCard(c, req.userId)))
   } catch (err) {
@@ -102,6 +104,7 @@ export async function upvoteCard(req, res, next) {
     const card = await prisma.card.update({
       where: { id: cardId },
       data: { upvotes: { increment: 1 } },
+      include: { _count: { select: { replies: true } } },
     })
     res.json(serializeCard(card, req.userId))
   } catch (err) {
@@ -109,11 +112,21 @@ export async function upvoteCard(req, res, next) {
   }
 }
 
-// PATCH /api/boards/:boardId/cards/:cardId/pin  body: { pinned: boolean }   (auth required, anyone)
+// PATCH /api/boards/:boardId/cards/:cardId/pin  body: { pinned: boolean }   (auth required)
+// Only the board's creator may pin/unpin cards on their board.
 export async function pinCard(req, res, next) {
   try {
     const { boardId, cardId } = req.params
     const { pinned } = req.body
+    const board = await prisma.board.findUnique({
+      where: { id: boardId },
+      select: { userId: true },
+    })
+    if (!board) return res.status(404).json({ error: 'Board not found.' })
+    if (board.userId !== req.userId) {
+      return res.status(403).json({ error: 'Only the board owner can pin cards.' })
+    }
+
     const existing = await prisma.card.findFirst({
       where: { id: cardId, boardId },
       select: { id: true },
@@ -123,6 +136,7 @@ export async function pinCard(req, res, next) {
     const card = await prisma.card.update({
       where: { id: cardId },
       data: { pinned, pinnedAt: pinned ? new Date() : null },
+      include: { _count: { select: { replies: true } } },
     })
     res.json(serializeCard(card, req.userId))
   } catch (err) {

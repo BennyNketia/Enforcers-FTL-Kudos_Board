@@ -22,9 +22,16 @@ import {
   pinCard,
 } from '../controllers/cardsController.js'
 import {
+  listReplies,
+  createReply,
+  deleteReply,
+  likeReply,
+} from '../controllers/repliesController.js'
+import {
   validateCreateBoard,
   validateListBoardsQuery,
   validateCreateCard,
+  validateCreateReply,
   validatePin,
 } from '../middleware/validate.js'
 import { authenticate, optionalAuth } from '../middleware/authenticate.js'
@@ -43,5 +50,11 @@ router.post('/:boardId/cards', authenticate, validateCreateCard, createCard)
 router.delete('/:boardId/cards/:cardId', authenticate, deleteCard)
 router.patch('/:boardId/cards/:cardId/upvote', authenticate, upvoteCard)
 router.patch('/:boardId/cards/:cardId/pin', authenticate, validatePin, pinCard)
+
+// Replies nested under a card
+router.get('/:boardId/cards/:cardId/replies', optionalAuth, listReplies)
+router.post('/:boardId/cards/:cardId/replies', authenticate, validateCreateReply, createReply)
+router.delete('/:boardId/cards/:cardId/replies/:replyId', authenticate, deleteReply)
+router.patch('/:boardId/cards/:cardId/replies/:replyId/like', authenticate, likeReply)
 
 export default router

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import UpvoteButton from './UpvoteButton.jsx'
+import CardReplies from './CardReplies.jsx'
 import { PinIcon, TrashIcon } from './icons.jsx'
 import './KudoCard.css'
 
@@ -8,20 +9,25 @@ function initialOf(name) {
   return t ? t[0].toUpperCase() : '🙂'
 }
 
-// A single appreciation card: GIF, message, author, upvote / pin / delete.
+// A single appreciation card: GIF, message, author, upvote / pin / delete,
+// plus a threaded replies section.
 export default function KudoCard({
   id,
+  boardId,
   message,
   gifUrl,
   author,
   upvotes,
   pinned,
+  replyCount = 0,
   isOwner = false,
+  canPin = false,
   onUpvote,
   onPin,
   onDelete,
 }) {
   const [deleting, setDeleting] = useState(false)
+  const [replies, setReplies] = useState(replyCount)
 
   function handleDelete() {
     setDeleting(true)
@@ -55,14 +61,16 @@ export default function KudoCard({
       <div className="kudo-card__footer">
         <UpvoteButton count={upvotes} onUpvote={() => onUpvote?.(id)} />
         <div className="kudo-card__actions">
-          <button
-            className={`kudo-card__icon-btn${pinned ? ' kudo-card__icon-btn--pinned' : ''}`}
-            onClick={() => onPin?.(id, !pinned)}
-            aria-label={pinned ? 'Unpin card' : 'Pin card'}
-            title={pinned ? 'Unpin' : 'Pin to top'}
-          >
-            <PinIcon filled={pinned} width="18" height="18" />
-          </button>
+          {canPin && (
+            <button
+              className={`kudo-card__icon-btn${pinned ? ' kudo-card__icon-btn--pinned' : ''}`}
+              onClick={() => onPin?.(id, !pinned)}
+              aria-label={pinned ? 'Unpin card' : 'Pin card'}
+              title={pinned ? 'Unpin' : 'Pin to top'}
+            >
+              <PinIcon filled={pinned} width="18" height="18" />
+            </button>
+          )}
           {isOwner && (
             <button
               className="kudo-card__icon-btn kudo-card__icon-btn--danger"
@@ -75,6 +83,13 @@ export default function KudoCard({
           )}
         </div>
       </div>
+
+      <CardReplies
+        boardId={boardId}
+        cardId={id}
+        replyCount={replies}
+        onCountChange={setReplies}
+      />
     </article>
   )
 }

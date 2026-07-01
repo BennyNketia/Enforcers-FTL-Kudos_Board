@@ -33,6 +33,7 @@ client.interceptors.request.use((config) => {
 
 const BOARDS_KEY = 'kudos-boards'
 const CARDS_KEY = 'kudos-cards'
+const REPLIES_KEY = 'kudos-replies'
 
 // ---- local storage helpers -------------------------------------------------
 
@@ -52,6 +53,7 @@ function write(key, value) {
 function ensureSeeded() {
   if (localStorage.getItem(BOARDS_KEY) === null) write(BOARDS_KEY, seedBoards())
   if (localStorage.getItem(CARDS_KEY) === null) write(CARDS_KEY, seedCards())
+  if (localStorage.getItem(REPLIES_KEY) === null) write(REPLIES_KEY, [])
 }
 
 function uuid() {
@@ -124,9 +126,18 @@ async function localDeleteBoard(boardId) {
 
 // ---- Cards -----------------------------------------------------------------
 
+// Attach derived replyCount, just like the API does.
+function withReplyCount(card, replies) {
+  return { ...card, replyCount: replies.filter((r) => r.cardId === card.id).length }
+}
+
 async function localGetCards(boardId) {
   ensureSeeded()
-  return sortCards(read(CARDS_KEY, []).filter((c) => c.boardId === boardId))
+  const replies = read(REPLIES_KEY, [])
+  const cards = read(CARDS_KEY, [])
+    .filter((c) => c.boardId === boardId)
+    .map((c) => withReplyCount(c, replies))
+  return sortCards(cards)
 }
 
 async function localCreateCard(boardId, { message, gifUrl, author }) {
@@ -143,12 +154,14 @@ async function localCreateCard(boardId, { message, gifUrl, author }) {
     createdAt: Date.now(),
   }
   write(CARDS_KEY, [...read(CARDS_KEY, []), card])
-  return card
+  return { ...card, replyCount: 0 }
 }
 
 async function localDeleteCard(boardId, cardId) {
   ensureSeeded()
   write(CARDS_KEY, read(CARDS_KEY, []).filter((c) => c.id !== cardId))
+  // cascade delete replies
+  write(REPLIES_KEY, read(REPLIES_KEY, []).filter((r) => r.cardId !== cardId))
 }
 
 function mutateCard(cardId, fn) {
@@ -157,7 +170,8 @@ function mutateCard(cardId, fn) {
   if (idx === -1) throw new ApiError(404, 'Card not found')
   cards[idx] = fn(cards[idx])
   write(CARDS_KEY, cards)
-  return cards[idx]
+  // Keep replyCount in sync so the returned card doesn't drop its badge.
+  return withReplyCount(cards[idx], read(REPLIES_KEY, []))
 }
 
 async function localUpvoteCard(boardId, cardId) {
@@ -172,6 +186,48 @@ async function localPinCard(boardId, cardId, pinned) {
     pinned,
     pinnedAt: pinned ? Date.now() : null,
   }))
+}
+
+// ---- Replies ---------------------------------------------------------------
+
+// Conversation order: oldest reply first.
+function sortReplies(replies) {
+  return [...replies].sort((a, b) => a.createdAt - b.createdAt)
+}
+
+async function localGetReplies(boardId, cardId) {
+  ensureSeeded()
+  return sortReplies(read(REPLIES_KEY, []).filter((r) => r.cardId === cardId))
+}
+
+async function localCreateReply(boardId, cardId, { message, gifUrl, author }) {
+  ensureSeeded()
+  const reply = {
+    id: uuid(),
+    cardId,
+    message: message.trim(),
+    gifUrl: gifUrl?.trim() || '',
+    author: author?.trim() || '',
+    likes: 0,
+    createdAt: Date.now(),
+  }
+  write(REPLIES_KEY, [...read(REPLIES_KEY, []), reply])
+  return reply
+}
+
+async function localDeleteReply(boardId, cardId, replyId) {
+  ensureSeeded()
+  write(REPLIES_KEY, read(REPLIES_KEY, []).filter((r) => r.id !== replyId))
+}
+
+async function localLikeReply(boardId, cardId, replyId) {
+  ensureSeeded()
+  const replies = read(REPLIES_KEY, [])
+  const idx = replies.findIndex((r) => r.id === replyId)
+  if (idx === -1) throw new ApiError(404, 'Reply not found')
+  replies[idx] = { ...replies[idx], likes: replies[idx].likes + 1 }
+  write(REPLIES_KEY, replies)
+  return replies[idx]
 }
 
 // ---- HTTP implementation (used when VITE_USE_API=true) ---------------------
@@ -265,6 +321,30 @@ export const api = {
     USE_API
       ? http('PATCH', `/boards/${boardId}/cards/${cardId}/pin`, { pinned })
       : localPinCard(boardId, cardId, pinned),
+
+  // GET /api/boards/:boardId/cards/:cardId/replies   (oldest first)
+  getReplies: (boardId, cardId) =>
+    USE_API
+      ? http('GET', `/boards/${boardId}/cards/${cardId}/replies`)
+      : localGetReplies(boardId, cardId),
+
+  // POST /api/boards/:boardId/cards/:cardId/replies   { message, gifUrl?, author? }
+  createReply: (boardId, cardId, data) =>
+    USE_API
+      ? http('POST', `/boards/${boardId}/cards/${cardId}/replies`, data)
+      : localCreateReply(boardId, cardId, data),
+
+  // DELETE /api/boards/:boardId/cards/:cardId/replies/:replyId   → 204
+  deleteReply: (boardId, cardId, replyId) =>
+    USE_API
+      ? http('DELETE', `/boards/${boardId}/cards/${cardId}/replies/${replyId}`)
+      : localDeleteReply(boardId, cardId, replyId),
+
+  // PATCH /api/boards/:boardId/cards/:cardId/replies/:replyId/like   (no body)
+  likeReply: (boardId, cardId, replyId) =>
+    USE_API
+      ? http('PATCH', `/boards/${boardId}/cards/${cardId}/replies/${replyId}/like`)
+      : localLikeReply(boardId, cardId, replyId),
 }
 
 export { defaultBoardImage, ApiError }

@@ -23,6 +23,7 @@ export function serializeBoard(board, currentUserId) {
 }
 
 export function serializeCard(card, currentUserId) {
+  const replyCount = card._count?.replies ?? card.replyCount ?? 0
   return {
     id: card.id,
     boardId: card.boardId,
@@ -33,6 +34,22 @@ export function serializeCard(card, currentUserId) {
     pinned: card.pinned,
     pinnedAt: ms(card.pinnedAt),
     createdAt: ms(card.createdAt),
+    replyCount,
     isOwner: Boolean(currentUserId && card.userId === currentUserId),
+  }
+}
+
+// A reply to a card: text + optional GIF + a `likes` counter. Like cards, it
+// carries `isOwner` so the frontend can hide the delete button for non-owners.
+export function serializeReply(reply, currentUserId) {
+  return {
+    id: reply.id,
+    cardId: reply.cardId,
+    message: reply.message,
+    gifUrl: reply.gifUrl,
+    author: reply.author,
+    likes: reply.likes,
+    createdAt: ms(reply.createdAt),
+    isOwner: Boolean(currentUserId && reply.userId === currentUserId),
   }
 }
