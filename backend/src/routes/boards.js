@@ -4,7 +4,8 @@
 //   - Reads are global (everyone sees everything). optionalAuth still runs
 //     so the serializer can stamp `isOwner` for the caller — used by the
 //     frontend to hide delete buttons on rows the user doesn't own.
-//   - All mutations require authenticate (no anonymous writes).
+//   - Creating a card is open to guests (spec §UA5); every other mutation
+//     requires authenticate.
 //   - Delete checks live in the controllers: only the creator may delete.
 import { Router } from 'express'
 
@@ -46,7 +47,10 @@ router.delete('/:boardId', authenticate, deleteBoard)
 
 // Cards nested under a board
 router.get('/:boardId/cards', optionalAuth, listCards)
-router.post('/:boardId/cards', authenticate, validateCreateCard, createCard)
+// Guests may create cards — `optionalAuth` populates req.userId when a token
+// is present so the card gets stamped with an owner; without a token the
+// card is anonymous (Card.userId = null) and no one can later delete it.
+router.post('/:boardId/cards', optionalAuth, validateCreateCard, createCard)
 router.delete('/:boardId/cards/:cardId', authenticate, deleteCard)
 router.patch('/:boardId/cards/:cardId/upvote', authenticate, upvoteCard)
 router.patch('/:boardId/cards/:cardId/pin', authenticate, validatePin, pinCard)

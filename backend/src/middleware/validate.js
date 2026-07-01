@@ -5,7 +5,9 @@
 // and short-circuits with 400 on failure. Controllers stay focused on DB work.
 
 const CATEGORIES = ['celebration', 'thankyou', 'inspiration']
-const FILTERS = ['all', 'recent', ...CATEGORIES]
+// 'mine' scopes the result to req.userId; the controller ignores it if the
+// caller is a guest (no session), so the query param is always safe to send.
+const FILTERS = ['all', 'recent', 'mine', ...CATEGORIES]
 
 function isNonEmptyString(v) {
   return typeof v === 'string' && v.trim().length > 0

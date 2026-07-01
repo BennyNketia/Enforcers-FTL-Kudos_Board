@@ -48,10 +48,12 @@ model Card {
   id        String    @id @default(uuid())
   boardId   String
   board     Board     @relation(fields: [boardId], references: [id], onDelete: Cascade)
-  // Card creator. Cascade so deleting a user wipes their cards along with
-  // their boards.
-  userId    String
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Card creator. Nullable to allow anonymous/guest cards (spec §UA5). Only
+  // the creator can delete their card; guest cards can never be deleted via
+  // the API (see cardsController.deleteCard). SetNull so deleting a user
+  // leaves the card intact instead of cascading it away.
+  userId    String?
+  user      User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
   message   String
   gifUrl    String
   author    String?

@@ -46,9 +46,10 @@ export async function listCards(req, res, next) {
   }
 }
 
-// POST /api/boards/:boardId/cards   (auth required by route)
-// Any signed-in user can add a card to any board. The card is stamped with
-// the caller's id so they (and only they) can delete it later.
+// POST /api/boards/:boardId/cards   (optionalAuth — guests allowed, spec §UA5)
+// Any user (signed in or guest) can add a card to any board. Signed-in cards
+// get stamped with the caller's id so they can delete them later; guest
+// cards have userId=null and are undeletable via the API (no owner to match).
 export async function createCard(req, res, next) {
   try {
     await assertBoardExists(req.params.boardId)
@@ -56,7 +57,7 @@ export async function createCard(req, res, next) {
     const card = await prisma.card.create({
       data: {
         boardId: req.params.boardId,
-        userId: req.userId,
+        userId: req.userId ?? null,
         message: message.trim(),
         gifUrl: gifUrl.trim(),
         author: author?.trim() || null,

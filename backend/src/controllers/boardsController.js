@@ -27,7 +27,14 @@ export async function listBoards(req, res, next) {
     const search = (req.query.search || '').trim()
 
     const where = {}
-    if (filter !== 'all' && filter !== 'recent') where.category = filter
+    // 'mine' scopes to the caller's boards. For a guest we treat it as 'all'
+    // rather than 401 — the frontend hides the pill for guests anyway, and
+    // returning an empty [] for a stray call would be confusing.
+    if (filter === 'mine') {
+      if (req.userId) where.userId = req.userId
+    } else if (filter !== 'all' && filter !== 'recent') {
+      where.category = filter
+    }
     if (search) where.title = { contains: search, mode: 'insensitive' }
 
     const boards = await prisma.board.findMany({

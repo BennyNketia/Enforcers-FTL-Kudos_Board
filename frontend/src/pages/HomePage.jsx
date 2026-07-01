@@ -64,6 +64,12 @@ export default function HomePage() {
   useEffect(() => { load() }, [load])
   useEffect(() => { loadAll() }, [loadAll])
 
+  // If the user logs out while viewing "My boards" (guest-hidden pill),
+  // fall back to 'all' so they aren't stuck on an empty, invisible filter.
+  useEffect(() => {
+    if (activeFilter === 'mine' && !user) setActiveFilter('all')
+  }, [user, activeFilter])
+
   const stats = useMemo(() => {
     const now = Date.now()
     return {
@@ -77,9 +83,15 @@ export default function HomePage() {
 
   async function handleCreate(data) {
     const created = await api.createBoard(data)
-    if (activeFilter === 'all' || activeFilter === 'recent' || activeFilter === created.category) {
-      setBoards((prev) => [created, ...prev])
-    }
+    // Match the server's filter to decide whether the new board should appear
+    // in the currently-visible grid. 'mine' always includes it — the creator
+    // is by definition the owner.
+    const includes =
+      activeFilter === 'all' ||
+      activeFilter === 'recent' ||
+      activeFilter === 'mine' ||
+      activeFilter === created.category
+    if (includes) setBoards((prev) => [created, ...prev])
     setAllBoards((prev) => [created, ...prev])
   }
 

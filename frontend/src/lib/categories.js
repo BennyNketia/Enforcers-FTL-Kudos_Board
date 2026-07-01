@@ -14,10 +14,13 @@ export const BOARD_CATEGORIES = [
   CATEGORIES.inspiration,
 ]
 
-// Filter pills on the home page. 'all' and 'recent' are view-only.
+// Filter pills on the home page. 'all', 'recent', and 'mine' are view-only.
+// The 'mine' pill is user-scoped and only rendered when someone is signed in
+// (see FilterBar).
 export const FILTERS = [
   { key: 'all', label: 'All' },
   { key: 'recent', label: 'Recent' },
+  { key: 'mine', label: 'My boards', authOnly: true },
   { key: 'celebration', label: 'Celebration' },
   { key: 'thankyou', label: 'Thank You' },
   { key: 'inspiration', label: 'Inspiration' },

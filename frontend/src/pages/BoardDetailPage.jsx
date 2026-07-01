@@ -48,16 +48,16 @@ export default function BoardDetailPage() {
     load()
   }, [load])
 
-  // The CreateCardModal calls handleCreate after its own form submit, so it
-  // only opens when a signed-in user clicks Add — the modal-open path is
-  // gated below in openAdd().
   async function handleCreate(data) {
     const created = await api.createCard(boardId, data)
     setCards((prev) => sortCards([created, ...prev]))
   }
 
+  // Guests are allowed to add cards (spec §UA5). No auth gate on this path —
+  // the backend accepts optionalAuth and stamps the card as anonymous when
+  // no token is present.
   function openAdd() {
-    requireAuth(() => setIsAddOpen(true))
+    setIsAddOpen(true)
   }
 
   function handleDelete(id) {
