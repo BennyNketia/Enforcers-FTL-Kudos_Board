@@ -20,6 +20,16 @@
   transform: translateY(-1px);
 }
 
+/* Liked by the current user — stays filled/accent until they un-like. */
+.upvote--liked {
+  color: var(--celebration-accent);
+  background-color: var(--celebration-accent-soft);
+  border-color: color-mix(in srgb, var(--celebration-accent) 35%, transparent);
+}
+.upvote--liked .upvote__icon {
+  color: var(--celebration-accent);
+}
+
 .upvote__icon {
   display: inline-flex;
   transition: transform var(--transition-fast);

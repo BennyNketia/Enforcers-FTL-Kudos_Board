@@ -20,6 +20,18 @@ const ORDER = [
   { createdAt: 'desc' },
 ]
 
+// Prisma `include` that attaches the reply count plus — when a user is signed
+// in — that user's own like row for each card. serializeCard turns the scoped
+// `likes` array into a boolean `liked`. For guests (userId undefined) we skip
+// the relation entirely rather than filter on `userId: undefined`, which Prisma
+// would treat as "no filter" and match every like.
+function cardInclude(userId) {
+  return {
+    _count: { select: { replies: true } },
+    ...(userId ? { likes: { where: { userId }, select: { userId: true } } } : {}),
+  }
+}
+
 // Throws 404 if the parent board is missing. Used by every /boards/:boardId/cards route.
 async function assertBoardExists(boardId) {
   const exists = await prisma.board.findUnique({ where: { id: boardId }, select: { id: true } })
@@ -37,7 +49,7 @@ export async function listCards(req, res, next) {
     const cards = await prisma.card.findMany({
       where: { boardId: req.params.boardId },
       orderBy: ORDER,
-      include: { _count: { select: { replies: true } } },
+      include: cardInclude(req.userId),
     })
     res.json(cards.map((c) => serializeCard(c, req.userId)))
   } catch (err) {
@@ -92,22 +104,42 @@ export async function deleteCard(req, res, next) {
   }
 }
 
-// PATCH /api/boards/:boardId/cards/:cardId/upvote  → +1   (auth required, anyone)
+// PATCH /api/boards/:boardId/cards/:cardId/upvote   (auth required, anyone)
+// Toggles the caller's upvote: like if they haven't, un-like if they have.
+// One like per user is enforced by the CardLike composite PK; the `upvotes`
+// counter is kept in sync inside a transaction so the two never drift.
 export async function upvoteCard(req, res, next) {
   try {
     const { boardId, cardId } = req.params
+    const userId = req.userId
     const existing = await prisma.card.findFirst({
       where: { id: cardId, boardId },
       select: { id: true },
     })
     if (!existing) return res.status(404).json({ error: 'Card not found.' })
 
-    const card = await prisma.card.update({
-      where: { id: cardId },
-      data: { upvotes: { increment: 1 } },
-      include: { _count: { select: { replies: true } } },
+    const like = await prisma.cardLike.findUnique({
+      where: { userId_cardId: { userId, cardId } },
+      select: { userId: true },
     })
-    res.json(serializeCard(card, req.userId))
+
+    const card = await prisma.$transaction(async (tx) => {
+      if (like) {
+        await tx.cardLike.delete({ where: { userId_cardId: { userId, cardId } } })
+        return tx.card.update({
+          where: { id: cardId },
+          data: { upvotes: { decrement: 1 } },
+          include: cardInclude(userId),
+        })
+      }
+      await tx.cardLike.create({ data: { userId, cardId } })
+      return tx.card.update({
+        where: { id: cardId },
+        data: { upvotes: { increment: 1 } },
+        include: cardInclude(userId),
+      })
+    })
+    res.json(serializeCard(card, userId))
   } catch (err) {
     next(err)
   }
@@ -137,7 +169,7 @@ export async function pinCard(req, res, next) {
     const card = await prisma.card.update({
       where: { id: cardId },
       data: { pinned, pinnedAt: pinned ? new Date() : null },
-      include: { _count: { select: { replies: true } } },
+      include: cardInclude(req.userId),
     })
     res.json(serializeCard(card, req.userId))
   } catch (err) {

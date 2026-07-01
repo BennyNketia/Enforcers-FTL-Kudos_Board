@@ -26,7 +26,11 @@ body {
 }
 
 #root {
+  /* 100dvh tracks the *dynamic* viewport so the footer isn't shoved under the
+     mobile browser's address bar (which 100vh ignores). 100vh stays first as a
+     fallback for browsers without dvh support. */
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
 }
@@ -316,5 +320,48 @@ ul {
   *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* ============================================================================
+   Touch & small-screen refinements.
+   The layout is already fluid via each component's breakpoints; these rules fix
+   the interaction-level issues that only surface on real phones/tablets.
+   ============================================================================ */
+
+/* iOS Safari auto-zooms the page whenever a focused input's font-size is under
+   16px. Several fields sit at 14–15px for visual density, so on coarse-pointer
+   (touch) devices we bump every text control to 16px to suppress that zoom.
+   `!important` + `pointer: coarse` is the standard scoped form of this fix — the
+   per-component field classes (`.field__textarea` etc.) would otherwise win the
+   cascade, and this leaves the denser desktop sizing untouched. */
+@media (pointer: coarse) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* On touch devices there is no hover, so hover-revealed controls are otherwise
+   unreachable — pin the board-card delete button visible. */
+@media (hover: none) {
+  .board-card .board-card__delete {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Grow the smallest icon-only controls to a comfortable tap size on touch
+   devices. Sizing the elements directly (rather than overlaying an invisible
+   hit-area) avoids stealing taps from neighbours — the reply like/delete pair
+   sit only 4px apart, so an oversized overlay would intercept the wrong one.
+   Descendant selectors (0,2,0) outrank the component rules they override. */
+@media (pointer: coarse) {
+  .card-replies .reply__delete,
+  .search-bar .search-bar__clear,
+  .board-card .board-card__delete {
+    width: 40px;
+    height: 40px;
   }
 }

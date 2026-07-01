@@ -10,6 +10,13 @@
 import { prisma } from '../lib/prisma.js'
 import { serializeReply } from '../lib/serialize.js'
 
+// When a user is signed in, attach that user's own like row for each reply so
+// serializeReply can expose a boolean `liked`. Skipped for guests — filtering
+// on `userId: undefined` would match every like (see cardsController).
+function replyInclude(userId) {
+  return userId ? { likedBy: { where: { userId }, select: { userId: true } } } : {}
+}
+
 // Throws 404 if the parent card (scoped to its board) is missing. Used by every
 // /boards/:boardId/cards/:cardId/replies route.
 async function assertCardExists(boardId, cardId) {
@@ -32,6 +39,7 @@ export async function listReplies(req, res, next) {
     const replies = await prisma.reply.findMany({
       where: { cardId },
       orderBy: { createdAt: 'asc' },
+      include: replyInclude(req.userId),
     })
     res.json(replies.map((r) => serializeReply(r, req.userId)))
   } catch (err) {
@@ -87,21 +95,42 @@ export async function deleteReply(req, res, next) {
   }
 }
 
-// PATCH /api/boards/:boardId/cards/:cardId/replies/:replyId/like  → +1   (auth required, anyone)
+// PATCH /api/boards/:boardId/cards/:cardId/replies/:replyId/like   (auth required, anyone)
+// Toggles the caller's like: like if they haven't, un-like if they have. One
+// like per user is enforced by the ReplyLike composite PK; the `likes` counter
+// is kept in sync inside a transaction so the two never drift.
 export async function likeReply(req, res, next) {
   try {
     const { cardId, replyId } = req.params
+    const userId = req.userId
     const existing = await prisma.reply.findFirst({
       where: { id: replyId, cardId },
       select: { id: true },
     })
     if (!existing) return res.status(404).json({ error: 'Reply not found.' })
 
-    const reply = await prisma.reply.update({
-      where: { id: replyId },
-      data: { likes: { increment: 1 } },
+    const like = await prisma.replyLike.findUnique({
+      where: { userId_replyId: { userId, replyId } },
+      select: { userId: true },
     })
-    res.json(serializeReply(reply, req.userId))
+
+    const reply = await prisma.$transaction(async (tx) => {
+      if (like) {
+        await tx.replyLike.delete({ where: { userId_replyId: { userId, replyId } } })
+        return tx.reply.update({
+          where: { id: replyId },
+          data: { likes: { decrement: 1 } },
+          include: replyInclude(userId),
+        })
+      }
+      await tx.replyLike.create({ data: { userId, replyId } })
+      return tx.reply.update({
+        where: { id: replyId },
+        data: { likes: { increment: 1 } },
+        include: replyInclude(userId),
+      })
+    })
+    res.json(serializeReply(reply, userId))
   } catch (err) {
     next(err)
   }

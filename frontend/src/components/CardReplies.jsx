@@ -63,12 +63,19 @@ export default function CardReplies({ boardId, cardId, replyCount = 0, onCountCh
 
   function handleLike(id) {
     requireAuth(async () => {
-      setReplies((rs) => rs.map((r) => (r.id === id ? { ...r, likes: r.likes + 1 } : r)))
+      // Optimistic toggle: flip `liked` and nudge the count; the server
+      // response reconciles the exact numbers. One like per user.
+      const prev = replies
+      setReplies((rs) =>
+        rs.map((r) =>
+          r.id === id ? { ...r, liked: !r.liked, likes: r.likes + (r.liked ? -1 : 1) } : r,
+        ),
+      )
       try {
         const updated = await api.likeReply(boardId, cardId, id)
         setReplies((rs) => rs.map((r) => (r.id === id ? updated : r)))
       } catch {
-        setReplies((rs) => rs.map((r) => (r.id === id ? { ...r, likes: r.likes - 1 } : r)))
+        setReplies(prev)
       }
     })
   }
@@ -126,11 +133,12 @@ export default function CardReplies({ boardId, cardId, replyCount = 0, onCountCh
                 <div className="reply__footer">
                   <button
                     type="button"
-                    className="reply__like"
+                    className={`reply__like${r.liked ? ' reply__like--liked' : ''}`}
                     onClick={() => handleLike(r.id)}
-                    aria-label={`Like (${r.likes})`}
+                    aria-pressed={r.liked}
+                    aria-label={r.liked ? `Unlike (${r.likes})` : `Like (${r.likes})`}
                   >
-                    <HeartIcon filled={r.likes > 0} width="14" height="14" />
+                    <HeartIcon filled={r.liked} width="14" height="14" />
                     <span>{r.likes}</span>
                   </button>
                   {r.isOwner && (

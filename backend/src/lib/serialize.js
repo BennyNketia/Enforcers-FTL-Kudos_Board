@@ -31,6 +31,10 @@ export function serializeCard(card, currentUserId) {
     gifUrl: card.gifUrl,
     author: card.author,
     upvotes: card.upvotes,
+    // Whether the current user has upvoted this card. Derived from a filtered
+    // `likes` relation (queries scope it to the caller: `where: { userId }`),
+    // so a non-empty array means "the caller liked it".
+    liked: Boolean(card.likes?.length),
     pinned: card.pinned,
     pinnedAt: ms(card.pinnedAt),
     createdAt: ms(card.createdAt),
@@ -49,6 +53,9 @@ export function serializeReply(reply, currentUserId) {
     gifUrl: reply.gifUrl,
     author: reply.author,
     likes: reply.likes,
+    // Whether the current user has liked this reply — see serializeCard's
+    // `liked` note; queries scope the `likedBy` relation to the caller.
+    liked: Boolean(reply.likedBy?.length),
     createdAt: ms(reply.createdAt),
     isOwner: Boolean(currentUserId && reply.userId === currentUserId),
   }

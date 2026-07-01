@@ -20,14 +20,16 @@ enum Category {
 }
 
 model User {
-  id           String   @id @default(uuid())
-  username     String   @unique // login identity; DB enforces uniqueness
+  id           String      @id @default(uuid())
+  username     String      @unique // login identity; DB enforces uniqueness
   passwordHash String // bcrypt hash — never the plaintext password
-  isAdmin      Boolean  @default(false)
-  createdAt    DateTime @default(now())
+  isAdmin      Boolean     @default(false)
+  createdAt    DateTime    @default(now())
   boards       Board[]
   cards        Card[]
   replies      Reply[]
+  cardLikes    CardLike[]
+  replyLikes   ReplyLike[]
 }
 
 model Board {
@@ -57,29 +59,57 @@ model Card {
   message   String
   gifUrl    String
   author    String?
-  upvotes   Int       @default(0)
-  pinned    Boolean   @default(false)
+  upvotes   Int        @default(0)
+  pinned    Boolean    @default(false)
   pinnedAt  DateTime?
-  createdAt DateTime  @default(now())
+  createdAt DateTime   @default(now())
   replies   Reply[]
+  likes     CardLike[]
 
   @@index([boardId])
   @@index([userId])
 }
 
 model Reply {
-  id        String   @id @default(uuid())
+  id        String      @id @default(uuid())
   cardId    String
-  card      Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  card      Card        @relation(fields: [cardId], references: [id], onDelete: Cascade)
   // Reply author. Cascade so deleting a user wipes their replies too.
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   message   String
   gifUrl    String? // optional — a reply can be text-only or carry its own GIF
   author    String?
-  likes     Int      @default(0)
-  createdAt DateTime @default(now())
+  likes     Int         @default(0) // denormalized count of ReplyLike rows
+  likedBy   ReplyLike[]
+  createdAt DateTime    @default(now())
 
   @@index([cardId])
   @@index([userId])
+}
+
+// Join rows recording which user liked which card / reply. The composite
+// primary key enforces "one like per user per target" at the DB level; the
+// `upvotes` / `likes` integer columns above stay as denormalized counts kept
+// in sync inside the toggle transactions (see the controllers).
+model CardLike {
+  userId    String
+  cardId    String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  card      Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+  @@id([userId, cardId])
+  @@index([cardId])
+}
+
+model ReplyLike {
+  userId    String
+  replyId   String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reply     Reply    @relation(fields: [replyId], references: [id], onDelete: Cascade)
+
+  @@id([userId, replyId])
+  @@index([replyId])
 }

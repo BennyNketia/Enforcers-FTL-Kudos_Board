@@ -74,13 +74,19 @@ export default function BoardDetailPage() {
 
   function handleUpvote(id) {
     requireAuth(async () => {
-      // optimistic +1
-      setCards((c) => c.map((x) => (x.id === id ? { ...x, upvotes: x.upvotes + 1 } : x)))
+      // Optimistic toggle: flip `liked` and nudge the count the matching way.
+      // The server reconciles the exact numbers in its response.
+      const prev = cards
+      setCards((c) =>
+        c.map((x) =>
+          x.id === id ? { ...x, liked: !x.liked, upvotes: x.upvotes + (x.liked ? -1 : 1) } : x,
+        ),
+      )
       try {
         const updated = await api.upvoteCard(boardId, id)
         setCards((c) => c.map((x) => (x.id === id ? updated : x)))
       } catch {
-        setCards((c) => c.map((x) => (x.id === id ? { ...x, upvotes: x.upvotes - 1 } : x)))
+        setCards(prev)
       }
     })
   }

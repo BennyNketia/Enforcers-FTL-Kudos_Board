@@ -34,6 +34,15 @@ client.interceptors.request.use((config) => {
 const BOARDS_KEY = 'kudos-boards'
 const CARDS_KEY = 'kudos-cards'
 const REPLIES_KEY = 'kudos-replies'
+// Per-user like records, mirroring the backend's CardLike / ReplyLike join
+// tables: each entry is { userId, cardId } / { userId, replyId }. Presence of a
+// row = that user liked that target, which enforces one-like-per-user and lets
+// us stamp a `liked` flag onto served cards/replies.
+const CARD_LIKES_KEY = 'kudos-card-likes'
+const REPLY_LIKES_KEY = 'kudos-reply-likes'
+// Where lib/auth.js persists the local "session" — used to attribute likes to
+// the current user. Kept in sync with auth.js's SESSION_KEY.
+const SESSION_KEY = 'kudos-auth-user'
 
 // ---- local storage helpers -------------------------------------------------
 
@@ -54,6 +63,15 @@ function ensureSeeded() {
   if (localStorage.getItem(BOARDS_KEY) === null) write(BOARDS_KEY, seedBoards())
   if (localStorage.getItem(CARDS_KEY) === null) write(CARDS_KEY, seedCards())
   if (localStorage.getItem(REPLIES_KEY) === null) write(REPLIES_KEY, [])
+  if (localStorage.getItem(CARD_LIKES_KEY) === null) write(CARD_LIKES_KEY, [])
+  if (localStorage.getItem(REPLY_LIKES_KEY) === null) write(REPLY_LIKES_KEY, [])
+}
+
+// Id of the locally signed-in user, or null. Likes are attributed to this id so
+// the "one like per user" rule matches the backend. Falls back to a stable
+// 'guest' bucket when no one is signed in — good enough for the offline demo.
+function currentUserId() {
+  return read(SESSION_KEY, null)?.id ?? 'guest'
 }
 
 function uuid() {
@@ -126,17 +144,23 @@ async function localDeleteBoard(boardId) {
 
 // ---- Cards -----------------------------------------------------------------
 
-// Attach derived replyCount, just like the API does.
-function withReplyCount(card, replies) {
-  return { ...card, replyCount: replies.filter((r) => r.cardId === card.id).length }
+// Attach derived replyCount + the current user's `liked` flag, just like the API.
+function withReplyCount(card, replies, cardLikes = read(CARD_LIKES_KEY, [])) {
+  const uid = currentUserId()
+  return {
+    ...card,
+    replyCount: replies.filter((r) => r.cardId === card.id).length,
+    liked: cardLikes.some((l) => l.cardId === card.id && l.userId === uid),
+  }
 }
 
 async function localGetCards(boardId) {
   ensureSeeded()
   const replies = read(REPLIES_KEY, [])
+  const cardLikes = read(CARD_LIKES_KEY, [])
   const cards = read(CARDS_KEY, [])
     .filter((c) => c.boardId === boardId)
-    .map((c) => withReplyCount(c, replies))
+    .map((c) => withReplyCount(c, replies, cardLikes))
   return sortCards(cards)
 }
 
@@ -154,7 +178,7 @@ async function localCreateCard(boardId, { message, gifUrl, author }) {
     createdAt: Date.now(),
   }
   write(CARDS_KEY, [...read(CARDS_KEY, []), card])
-  return { ...card, replyCount: 0 }
+  return { ...card, replyCount: 0, liked: false }
 }
 
 async function localDeleteCard(boardId, cardId) {
@@ -174,9 +198,21 @@ function mutateCard(cardId, fn) {
   return withReplyCount(cards[idx], read(REPLIES_KEY, []))
 }
 
+// Toggle the current user's upvote (mirrors the backend). Liking adds a like
+// record and bumps the count; clicking again removes both.
 async function localUpvoteCard(boardId, cardId) {
   ensureSeeded()
-  return mutateCard(cardId, (c) => ({ ...c, upvotes: c.upvotes + 1 }))
+  const uid = currentUserId()
+  const likes = read(CARD_LIKES_KEY, [])
+  const alreadyLiked = likes.some((l) => l.cardId === cardId && l.userId === uid)
+
+  write(
+    CARD_LIKES_KEY,
+    alreadyLiked
+      ? likes.filter((l) => !(l.cardId === cardId && l.userId === uid))
+      : [...likes, { userId: uid, cardId }],
+  )
+  return mutateCard(cardId, (c) => ({ ...c, upvotes: c.upvotes + (alreadyLiked ? -1 : 1) }))
 }
 
 async function localPinCard(boardId, cardId, pinned) {
@@ -195,9 +231,20 @@ function sortReplies(replies) {
   return [...replies].sort((a, b) => a.createdAt - b.createdAt)
 }
 
+// Stamp each reply with the current user's `liked` flag, mirroring the API.
+function withReplyLiked(reply, replyLikes = read(REPLY_LIKES_KEY, []), uid = currentUserId()) {
+  return { ...reply, liked: replyLikes.some((l) => l.replyId === reply.id && l.userId === uid) }
+}
+
 async function localGetReplies(boardId, cardId) {
   ensureSeeded()
-  return sortReplies(read(REPLIES_KEY, []).filter((r) => r.cardId === cardId))
+  const replyLikes = read(REPLY_LIKES_KEY, [])
+  const uid = currentUserId()
+  return sortReplies(
+    read(REPLIES_KEY, [])
+      .filter((r) => r.cardId === cardId)
+      .map((r) => withReplyLiked(r, replyLikes, uid)),
+  )
 }
 
 async function localCreateReply(boardId, cardId, { message, gifUrl, author }) {
@@ -212,7 +259,7 @@ async function localCreateReply(boardId, cardId, { message, gifUrl, author }) {
     createdAt: Date.now(),
   }
   write(REPLIES_KEY, [...read(REPLIES_KEY, []), reply])
-  return reply
+  return { ...reply, liked: false }
 }
 
 async function localDeleteReply(boardId, cardId, replyId) {
@@ -220,14 +267,26 @@ async function localDeleteReply(boardId, cardId, replyId) {
   write(REPLIES_KEY, read(REPLIES_KEY, []).filter((r) => r.id !== replyId))
 }
 
+// Toggle the current user's like on a reply (mirrors the backend).
 async function localLikeReply(boardId, cardId, replyId) {
   ensureSeeded()
+  const uid = currentUserId()
+  const likes = read(REPLY_LIKES_KEY, [])
+  const alreadyLiked = likes.some((l) => l.replyId === replyId && l.userId === uid)
+
+  write(
+    REPLY_LIKES_KEY,
+    alreadyLiked
+      ? likes.filter((l) => !(l.replyId === replyId && l.userId === uid))
+      : [...likes, { userId: uid, replyId }],
+  )
+
   const replies = read(REPLIES_KEY, [])
   const idx = replies.findIndex((r) => r.id === replyId)
   if (idx === -1) throw new ApiError(404, 'Reply not found')
-  replies[idx] = { ...replies[idx], likes: replies[idx].likes + 1 }
+  replies[idx] = { ...replies[idx], likes: replies[idx].likes + (alreadyLiked ? -1 : 1) }
   write(REPLIES_KEY, replies)
-  return replies[idx]
+  return withReplyLiked(replies[idx], read(REPLY_LIKES_KEY, []), uid)
 }
 
 // ---- HTTP implementation (used when VITE_USE_API=true) ---------------------

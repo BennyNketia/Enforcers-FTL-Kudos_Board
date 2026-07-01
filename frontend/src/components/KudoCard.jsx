@@ -18,6 +18,7 @@ export default function KudoCard({
   gifUrl,
   author,
   upvotes,
+  liked = false,
   pinned,
   replyCount = 0,
   isOwner = false,
@@ -59,7 +60,7 @@ export default function KudoCard({
       </div>
 
       <div className="kudo-card__footer">
-        <UpvoteButton count={upvotes} onUpvote={() => onUpvote?.(id)} />
+        <UpvoteButton count={upvotes} liked={liked} onUpvote={() => onUpvote?.(id)} />
         <div className="kudo-card__actions">
           {canPin && (
             <button

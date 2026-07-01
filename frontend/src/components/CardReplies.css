@@ -113,6 +113,11 @@
   color: var(--danger);
   background-color: var(--danger-soft);
 }
+/* Liked by the current user — stays filled/red until they un-like. */
+.reply__like--liked {
+  color: var(--danger);
+  background-color: var(--danger-soft);
+}
 .reply__delete {
   display: inline-flex;
   align-items: center;
