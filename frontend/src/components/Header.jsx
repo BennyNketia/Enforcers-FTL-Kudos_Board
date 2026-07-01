@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import ThemeToggle from './ThemeToggle.jsx'
 import AuthMenu from './AuthMenu.jsx'
-import { LogoIcon, PlusIcon } from './icons.jsx'
+import Logo from './Logo.jsx'
+import { PlusIcon } from './icons.jsx'
 import './Header.css'
 
 // Sticky top navigation: brand (left), Create Board + theme toggle + auth (right).
@@ -22,12 +23,7 @@ export default function Header({ theme, onToggleTheme, user, onRequestAuth, onLo
   return (
     <header className={`header${scrolled ? ' header--scrolled' : ''}`}>
       <div className="container header__inner">
-        <Link to="/" className="header__brand" aria-label="Kudos Board home">
-          <span className="header__logo">
-            <LogoIcon />
-          </span>
-          <span className="header__title t-h3">Kudos Board</span>
-        </Link>
+        <Logo className="header__brand" />
 
         <div className="header__actions">
           <button

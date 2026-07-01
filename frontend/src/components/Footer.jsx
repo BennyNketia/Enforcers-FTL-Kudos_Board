@@ -1,4 +1,3 @@
-import { LogoIcon } from './icons.jsx'
 import './Footer.css'
 
 export default function Footer() {
@@ -7,7 +6,7 @@ export default function Footer() {
     <footer className="footer">
       <div className="container footer__inner">
         <span className="footer__brand">
-          <span className="footer__logo" aria-hidden><LogoIcon width="18" height="18" /></span>
+          <img className="footer__logo" src="/kudos-icon.png" alt="" aria-hidden="true" width="28" height="28" />
           <span className="t-body-sm">Made with 💜 to celebrate your team.</span>
         </span>
         <span className="t-body-sm footer__copy">© {year} Kudos Board</span>

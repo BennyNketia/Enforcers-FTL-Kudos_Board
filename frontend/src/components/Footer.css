@@ -21,14 +21,10 @@
   gap: var(--space-2);
 }
 .footer__logo {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
   width: 28px;
   height: 28px;
-  border-radius: var(--radius-sm);
-  color: var(--primary);
-  background-color: var(--primary-soft);
+  object-fit: contain;
+  display: block;
 }
 .footer__copy {
   color: var(--muted-text);

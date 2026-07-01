@@ -27,25 +27,7 @@
 .header__brand {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-3);
   border-radius: var(--radius-md);
-}
-
-.header__logo {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 42px;
-  height: 42px;
-  border-radius: var(--radius-md);
-  color: #fff;
-  background-image: var(--gradient-primary);
-  box-shadow: var(--shadow-primary);
-}
-
-.header__title {
-  color: var(--text-primary);
-  letter-spacing: -0.01em;
 }
 
 .header__actions {
@@ -55,9 +37,6 @@
 }
 
 @media (max-width: 560px) {
-  .header__title {
-    display: none;
-  }
   .header__create-label {
     display: none;
   }

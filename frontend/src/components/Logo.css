@@ -1,0 +1,38 @@
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  border-radius: var(--radius-md);
+}
+
+.logo__icon {
+  height: 48px;
+  width: 48px;
+  object-fit: contain;
+  display: block;
+  flex-shrink: 0;
+}
+
+.logo__text {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 1.5rem;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.logo__text-accent {
+  color: var(--primary);
+}
+
+@media (max-width: 640px) {
+  .logo__icon {
+    height: 40px;
+    width: 40px;
+  }
+  .logo__text {
+    font-size: 1.25rem;
+  }
+}

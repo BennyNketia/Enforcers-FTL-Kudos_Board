@@ -60,13 +60,6 @@ export const ArrowLeftIcon = (p) => (
   </svg>
 )
 
-export const LogoIcon = (p) => (
-  <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}>
-    <path d="M12 2 4 5v6c0 5 3.4 7.8 8 9 4.6-1.2 8-4 8-9V5z" />
-    <path d="m9 12 2 2 4-4" />
-  </svg>
-)
-
 export const LayersIcon = (p) => (
   <svg viewBox="0 0 24 24" width="20" height="20" {...base} {...p}>
     <path d="m12 2 9 5-9 5-9-5 9-5z" />
