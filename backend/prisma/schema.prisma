@@ -61,8 +61,10 @@ model Card {
   // to authorize a delete. Null for signed-in cards and for legacy guest cards
   // created before this column existed (those stay undeletable).
   guestKey  String?
-  message   String
-  gifUrl    String
+  // A card must have at least one of message / gifUrl (validator enforces).
+  // Both nullable at the DB level so text-only and GIF-only cards are allowed.
+  message   String?
+  gifUrl    String?
   author    String?
   upvotes   Int        @default(0)
   pinned    Boolean    @default(false)

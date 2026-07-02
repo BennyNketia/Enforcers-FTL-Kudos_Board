@@ -52,7 +52,7 @@ export default function KudoCard({
       )}
 
       <div className="kudo-card__body">
-        <p className="kudo-card__message t-body-md">{message}</p>
+        {message && <p className="kudo-card__message t-body-md">{message}</p>}
         <div className="kudo-card__author">
           <span className="avatar kudo-card__avatar" aria-hidden>{initialOf(author)}</span>
           <span className="t-body-sm">{author ? author : 'Anonymous'}</span>

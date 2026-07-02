@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Card" ALTER COLUMN "message" DROP NOT NULL,
+ALTER COLUMN "gifUrl" DROP NOT NULL;

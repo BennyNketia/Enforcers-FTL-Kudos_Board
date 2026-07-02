@@ -6,11 +6,31 @@
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
-    { "key": "baseUrl", "value": "http://localhost:3000", "type": "string" },
-    { "key": "token", "value": "", "type": "string" },
-    { "key": "boardId", "value": "", "type": "string" },
-    { "key": "cardId", "value": "", "type": "string" },
-    { "key": "replyId", "value": "", "type": "string" }
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "boardId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "cardId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "replyId",
+      "value": "",
+      "type": "string"
+    }
   ],
   "item": [
     {
@@ -23,8 +43,13 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/health",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "health"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "health"
+              ]
             }
           }
         }
@@ -49,15 +74,26 @@
           ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"username\": \"testuser\",\n  \"password\": \"testpass\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/auth/signup",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "auth", "signup"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "signup"
+              ]
             }
           }
         },
@@ -77,15 +113,26 @@
           ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"username\": \"testuser\",\n  \"password\": \"testpass\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/auth/login",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "auth", "login"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
             }
           }
         },
@@ -96,8 +143,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/auth/logout",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "auth", "logout"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "logout"
+              ]
             }
           }
         },
@@ -106,12 +159,21 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/api/auth/me",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "auth", "me"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "me"
+              ]
             }
           }
         }
@@ -125,15 +187,31 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/api/boards?filter=all&search=",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "boards"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "boards"
+              ],
               "query": [
-                { "key": "filter", "value": "all", "description": "one of: all, recent, mine, celebration, thankyou, inspiration" },
-                { "key": "search", "value": "", "description": "case-insensitive title contains" }
+                {
+                  "key": "filter",
+                  "value": "all",
+                  "description": "one of: all, recent, mine, celebration, thankyou, inspiration"
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "description": "case-insensitive title contains"
+                }
               ]
             }
           }
@@ -143,12 +221,21 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/api/boards/{{boardId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "boards", "{{boardId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "boards",
+                "{{boardId}}"
+              ]
             }
           }
         },
@@ -169,8 +256,14 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -178,8 +271,13 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/boards",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "boards"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "boards"
+              ]
             },
             "description": "category must be one of: celebration, thankyou, inspiration."
           }
@@ -189,12 +287,21 @@
           "request": {
             "method": "DELETE",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/api/boards/{{boardId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "boards", "{{boardId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "boards",
+                "{{boardId}}"
+              ]
             }
           }
         }
@@ -208,12 +315,22 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/api/boards/{{boardId}}/cards",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "boards", "{{boardId}}", "cards"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "boards",
+                "{{boardId}}",
+                "cards"
+              ]
             }
           }
         },
@@ -234,8 +351,15 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}", "description": "Optional — guests can create cards; auth stamps the owner." }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "description": "Optional \u2014 guests can create cards; auth stamps the owner."
+              }
             ],
             "body": {
               "mode": "raw",
@@ -243,8 +367,15 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/boards/{{boardId}}/cards",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "boards", "{{boardId}}", "cards"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "boards",
+                "{{boardId}}",
+                "cards"
+              ]
             }
           }
         },
@@ -253,12 +384,23 @@
           "request": {
             "method": "DELETE",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/api/boards/{{boardId}}/cards/{{cardId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "boards", "{{boardId}}", "cards", "{{cardId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "boards",
+                "{{boardId}}",
+                "cards",
+                "{{cardId}}"
+              ]
             }
           }
         },
@@ -267,12 +409,24 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/api/boards/{{boardId}}/cards/{{cardId}}/upvote",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "boards", "{{boardId}}", "cards", "{{cardId}}", "upvote"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "boards",
+                "{{boardId}}",
+                "cards",
+                "{{cardId}}",
+                "upvote"
+              ]
             }
           }
         },
@@ -281,8 +435,14 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -290,8 +450,17 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/boards/{{boardId}}/cards/{{cardId}}/pin",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "boards", "{{boardId}}", "cards", "{{cardId}}", "pin"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "boards",
+                "{{boardId}}",
+                "cards",
+                "{{cardId}}",
+                "pin"
+              ]
             }
           }
         }
@@ -305,12 +474,24 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/api/boards/{{boardId}}/cards/{{cardId}}/replies",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "boards", "{{boardId}}", "cards", "{{cardId}}", "replies"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "boards",
+                "{{boardId}}",
+                "cards",
+                "{{cardId}}",
+                "replies"
+              ]
             }
           }
         },
@@ -331,8 +512,14 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -340,8 +527,17 @@
             },
             "url": {
               "raw": "{{baseUrl}}/api/boards/{{boardId}}/cards/{{cardId}}/replies",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "boards", "{{boardId}}", "cards", "{{cardId}}", "replies"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "boards",
+                "{{boardId}}",
+                "cards",
+                "{{cardId}}",
+                "replies"
+              ]
             },
             "description": "Either message or gifUrl is required (or both)."
           }
@@ -351,12 +547,25 @@
           "request": {
             "method": "DELETE",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/api/boards/{{boardId}}/cards/{{cardId}}/replies/{{replyId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "boards", "{{boardId}}", "cards", "{{cardId}}", "replies", "{{replyId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "boards",
+                "{{boardId}}",
+                "cards",
+                "{{cardId}}",
+                "replies",
+                "{{replyId}}"
+              ]
             }
           }
         },
@@ -365,12 +574,26 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
             ],
             "url": {
               "raw": "{{baseUrl}}/api/boards/{{boardId}}/cards/{{cardId}}/replies/{{replyId}}/like",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "boards", "{{boardId}}", "cards", "{{cardId}}", "replies", "{{replyId}}", "like"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "boards",
+                "{{boardId}}",
+                "cards",
+                "{{cardId}}",
+                "replies",
+                "{{replyId}}",
+                "like"
+              ]
             }
           }
         }
@@ -383,15 +606,26 @@
           "name": "POST /api/ai/compose",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"keywords\": \"shipped the release ahead of schedule, unblocked the team\",\n  \"tone\": \"heartfelt\",\n  \"recipient\": \"Sam\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/ai/compose",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "ai", "compose"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "ai",
+                "compose"
+              ]
             },
             "description": "tone: heartfelt | funny | professional | poetic | hype"
           }
@@ -400,15 +634,26 @@
           "name": "POST /api/ai/suggest-gifs",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"message\": \"Congrats on the launch — you crushed it!\"\n}"
+              "raw": "{\n  \"message\": \"Congrats on the launch \u2014 you crushed it!\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/api/ai/suggest-gifs",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "ai", "suggest-gifs"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "ai",
+                "suggest-gifs"
+              ]
             }
           }
         }
@@ -424,11 +669,24 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/giphy/search?q=celebration&limit=12",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "giphy", "search"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "giphy",
+                "search"
+              ],
               "query": [
-                { "key": "q", "value": "celebration", "description": "omit for trending GIFs" },
-                { "key": "limit", "value": "12" }
+                {
+                  "key": "q",
+                  "value": "celebration",
+                  "description": "omit for trending GIFs"
+                },
+                {
+                  "key": "limit",
+                  "value": "12"
+                }
               ]
             }
           }

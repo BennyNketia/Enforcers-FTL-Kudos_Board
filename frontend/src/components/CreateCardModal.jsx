@@ -5,7 +5,8 @@ import KudosComposer from './KudosComposer.jsx'
 
 const EMPTY = { message: '', gifUrl: '', author: '' }
 
-// Form dialog to add a card. Message + a selected GIF are required.
+// Form dialog to add a card. Either a message or a GIF is required — a card
+// can be text-only, GIF-only, or both.
 export default function CreateCardModal({ open, boardCategory, onClose, onCreate }) {
   const [form, setForm] = useState(EMPTY)
   const [errors, setErrors] = useState({})
@@ -31,8 +32,11 @@ export default function CreateCardModal({ open, boardCategory, onClose, onCreate
 
   function validate() {
     const next = {}
-    if (!form.message.trim()) next.message = 'A message is required.'
-    if (!form.gifUrl) next.gifUrl = 'Please pick a GIF.'
+    if (!form.message.trim() && !form.gifUrl) {
+      // Anchor the single "one required" error on the message field's slot;
+      // it's the top field so the user's eye lands on it first.
+      next.message = 'Add a message or a GIF.'
+    }
     setErrors(next)
     return Object.keys(next).length === 0
   }
@@ -57,8 +61,8 @@ export default function CreateCardModal({ open, boardCategory, onClose, onCreate
 
   // Create button accent follows the board's category.
   const accentClass = boardCategory ? `ui-btn--cat-${boardCategory}` : ''
-  // Submit only enables once both required fields are satisfied.
-  const canSubmit = form.message.trim() !== '' && form.gifUrl !== '' && !submitting
+  // Submit enables as soon as at least one of message / GIF is filled in.
+  const canSubmit = (form.message.trim() !== '' || form.gifUrl !== '') && !submitting
 
   return (
     <Modal open={open} title="Add a Kudos Card" onClose={onClose} maxWidth="36rem">
@@ -66,7 +70,7 @@ export default function CreateCardModal({ open, boardCategory, onClose, onCreate
         <div className="field">
           <div className="field__label-row">
             <label className="field__label" htmlFor="card-message">
-              Message<span className="req">*</span>
+              Message
             </label>
             <KudosComposer onResult={handleComposed} />
           </div>
@@ -83,7 +87,7 @@ export default function CreateCardModal({ open, boardCategory, onClose, onCreate
 
         <div className="field">
           <label className="field__label">
-            Choose a GIF<span className="req">*</span>
+            Choose a GIF
           </label>
           <GifPicker selectedUrl={form.gifUrl} onSelect={(url) => set('gifUrl', url)} message={form.message} />
           {errors.gifUrl && <span className="field__error">{errors.gifUrl}</span>}

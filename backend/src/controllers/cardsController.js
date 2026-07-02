@@ -75,8 +75,8 @@ export async function createCard(req, res, next) {
         boardId: req.params.boardId,
         userId: req.userId ?? null,
         guestKey,
-        message: message.trim(),
-        gifUrl: gifUrl.trim(),
+        message: message?.trim() || null,
+        gifUrl: gifUrl?.trim() || null,
         author: author?.trim() || null,
       },
     })

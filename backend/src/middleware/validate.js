@@ -50,13 +50,24 @@ export function validateListBoardsQuery(req, res, next) {
   next()
 }
 
-// POST /api/boards/:boardId/cards — message + gifUrl required.
+// POST /api/boards/:boardId/cards — either message or gifUrl must be present
+// (a card can be text-only, GIF-only, or both).
 export function validateCreateCard(req, res, next) {
   const body = req.body || {}
   const details = {}
 
-  if (!isNonEmptyString(body.message)) details.message = 'Message is required.'
-  if (!isNonEmptyString(body.gifUrl)) details.gifUrl = 'A GIF is required.'
+  const hasMessage = isNonEmptyString(body.message)
+  const hasGif = isNonEmptyString(body.gifUrl)
+
+  if (!hasMessage && !hasGif) {
+    details.message = 'Add a message or a GIF.'
+  }
+  if (body.message !== undefined && body.message !== null && typeof body.message !== 'string') {
+    details.message = 'message must be a string.'
+  }
+  if (body.gifUrl !== undefined && body.gifUrl !== null && typeof body.gifUrl !== 'string') {
+    details.gifUrl = 'gifUrl must be a string.'
+  }
   if (body.author !== undefined && body.author !== null && typeof body.author !== 'string') {
     details.author = 'author must be a string.'
   }
