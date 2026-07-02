@@ -39,6 +39,7 @@
   box-shadow: var(--shadow-sm);
 }
 .pill--all.pill--active { background-color: var(--primary); }
+.pill--mine.pill--active { background-color: var(--primary); }
 .pill--recent.pill--active { background-color: var(--recent-accent); }
 .pill--celebration.pill--active { background-color: var(--celebration-accent); }
 .pill--thankyou.pill--active { background-color: var(--thankyou-accent); }
