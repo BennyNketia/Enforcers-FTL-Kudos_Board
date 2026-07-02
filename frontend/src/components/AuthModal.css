@@ -27,6 +27,37 @@
   box-shadow: var(--shadow-sm);
 }
 
+/* Password field with an inline show/hide toggle. The button floats over the
+   input's right edge; extra right padding keeps typed text clear of the icon. */
+.pw-input {
+  position: relative;
+}
+.pw-input__field {
+  padding-right: var(--space-10);
+}
+.pw-input__toggle {
+  position: absolute;
+  top: 50%;
+  right: var(--space-2);
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  color: var(--muted-text);
+  transition: color var(--transition-fast), background-color var(--transition-fast);
+}
+.pw-input__toggle:hover {
+  color: var(--text-primary);
+  background-color: var(--surface-hover);
+}
+.pw-input__toggle svg {
+  width: 18px;
+  height: 18px;
+}
+
 /* "Don't have an account? Create one" line under the form. */
 .auth-switch {
   margin-top: var(--space-5);

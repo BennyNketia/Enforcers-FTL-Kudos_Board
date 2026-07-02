@@ -1,7 +1,17 @@
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
 import Modal from './Modal.jsx'
+import { EyeIcon, EyeOffIcon } from './icons.jsx'
 import { auth } from '../lib/auth.js'
 import './AuthModal.css'
+
+// Lazy so zxcvbn + its dictionaries download only when the signup tab needs
+// them — sign-in users never pay for that chunk.
+const PasswordStrengthMeter = lazy(() => import('./PasswordStrengthMeter.jsx'))
+
+// Minimum zxcvbn score (0..4) required to create an account. 3 = "Good":
+// must be *above* the 2nd level ("Fair"), so trivially guessable and merely
+// so-so passwords are both rejected.
+const MIN_PASSWORD_SCORE = 3
 
 const EMPTY = { username: '', password: '' }
 
@@ -13,6 +23,10 @@ export default function AuthModal({ open, mode = 'login', onClose, onAuthenticat
   const [form, setForm] = useState(EMPTY)
   const [errors, setErrors] = useState({})
   const [submitting, setSubmitting] = useState(false)
+  // Latest zxcvbn score, lifted up from the meter (null until it first reports).
+  const [pwScore, setPwScore] = useState(null)
+  // Reveal the password as plain text while this is on.
+  const [showPassword, setShowPassword] = useState(false)
 
   // Reset to the requested mode whenever the modal is (re)opened.
   useEffect(() => {
@@ -21,8 +35,13 @@ export default function AuthModal({ open, mode = 'login', onClose, onAuthenticat
       setForm(EMPTY)
       setErrors({})
       setSubmitting(false)
+      setPwScore(null)
+      setShowPassword(false)
     }
   }, [open, mode])
+
+  // Stable identity so the meter's onResult effect doesn't re-fire every render.
+  const handlePwResult = useCallback((result) => setPwScore(result.score), [])
 
   const isSignup = tab === 'signup'
 
@@ -39,6 +58,11 @@ export default function AuthModal({ open, mode = 'login', onClose, onAuthenticat
     const next = {}
     if (!form.username.trim()) next.username = 'Username is required.'
     if (!form.password) next.password = 'Password is required.'
+    // Enforce strength on signup only — never block an existing user from
+    // signing in with a password that predates this rule.
+    else if (isSignup && pwScore !== null && pwScore < MIN_PASSWORD_SCORE) {
+      next.password = 'Please choose a stronger password.'
+    }
     setErrors(next)
     return Object.keys(next).length === 0
   }
@@ -107,16 +131,40 @@ export default function AuthModal({ open, mode = 'login', onClose, onAuthenticat
           <label className="field__label" htmlFor="auth-password">
             Password<span className="req">*</span>
           </label>
-          <input
-            id="auth-password"
-            type="password"
-            className={`field__input${errors.password ? ' field__input--error' : ''}`}
-            value={form.password}
-            onChange={(e) => set('password', e.target.value)}
-            placeholder={isSignup ? 'Choose a password' : 'Your password'}
-            autoComplete={isSignup ? 'new-password' : 'current-password'}
-          />
+          <div className="pw-input">
+            <input
+              id="auth-password"
+              type={showPassword ? 'text' : 'password'}
+              className={`field__input pw-input__field${errors.password ? ' field__input--error' : ''}`}
+              value={form.password}
+              onChange={(e) => set('password', e.target.value)}
+              placeholder={isSignup ? 'Choose a password' : 'Your password'}
+              autoComplete={isSignup ? 'new-password' : 'current-password'}
+            />
+            <button
+              type="button"
+              className="pw-input__toggle"
+              onClick={() => setShowPassword((s) => !s)}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+              aria-pressed={showPassword}
+              tabIndex={-1}
+            >
+              {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+            </button>
+          </div>
           {errors.password && <span className="field__error">{errors.password}</span>}
+
+          {/* Live strength feedback — signup only. Suspense renders nothing
+              while the lazy chunk loads (it arrives in a keystroke or two). */}
+          {isSignup && form.password && (
+            <Suspense fallback={null}>
+              <PasswordStrengthMeter
+                password={form.password}
+                userInputs={form.username ? [form.username] : []}
+                onResult={handlePwResult}
+              />
+            </Suspense>
+          )}
         </div>
 
         {errors.form && (
