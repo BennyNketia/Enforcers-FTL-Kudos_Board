@@ -50,12 +50,17 @@ model Card {
   id        String    @id @default(uuid())
   boardId   String
   board     Board     @relation(fields: [boardId], references: [id], onDelete: Cascade)
-  // Card creator. Nullable to allow anonymous/guest cards (spec §UA5). Only
-  // the creator can delete their card; guest cards can never be deleted via
-  // the API (see cardsController.deleteCard). SetNull so deleting a user
-  // leaves the card intact instead of cascading it away.
+  // Card creator. Nullable to allow anonymous/guest cards (spec §UA5). Signed-in
+  // creators delete by userId match; guest creators delete by presenting the
+  // per-card `guestKey` returned in the POST response — see deleteCard.
+  // SetNull so deleting a user leaves the card intact instead of cascading it away.
   userId    String?
   user      User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  // Random secret handed back to the browser when a guest creates a card. The
+  // owning browser stores it in localStorage and returns it in `X-Guest-Key`
+  // to authorize a delete. Null for signed-in cards and for legacy guest cards
+  // created before this column existed (those stay undeletable).
+  guestKey  String?
   message   String
   gifUrl    String
   author    String?

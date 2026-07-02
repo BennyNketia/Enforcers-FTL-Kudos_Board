@@ -4,7 +4,7 @@ import BoardDetailHeader from '../components/BoardDetailHeader.jsx'
 import CardGrid from '../components/CardGrid.jsx'
 import CreateCardModal from '../components/CreateCardModal.jsx'
 import EmptyState from '../components/EmptyState.jsx'
-import { api } from '../lib/api.js'
+import { api, isGuestOwned } from '../lib/api.js'
 import { useAuth } from '../hooks/useAuth.js'
 import './BoardDetailPage.css'
 
@@ -15,6 +15,13 @@ function sortCards(cards) {
     if (a.pinned && b.pinned) return (b.pinnedAt ?? 0) - (a.pinnedAt ?? 0)
     return b.createdAt - a.createdAt
   })
+}
+
+// Server stamps `isOwner` only for signed-in creators. A guest owns the cards
+// this browser created — detected via the guestKey we stashed at create time.
+// OR it in so KudoCard shows the trash icon for guest-created cards too.
+function withGuestOwnership(card) {
+  return card.isOwner || !isGuestOwned(card.id) ? card : { ...card, isOwner: true }
 }
 
 export default function BoardDetailPage() {
@@ -36,7 +43,7 @@ export default function BoardDetailPage() {
     try {
       const [b, c] = await Promise.all([api.getBoard(boardId), api.getCards(boardId)])
       setBoard(b)
-      setCards(sortCards(c))
+      setCards(sortCards(c.map(withGuestOwnership)))
     } catch (err) {
       setError(err?.status === 404 ? 'notfound' : err?.message || 'Failed to load board.')
     } finally {
@@ -50,7 +57,7 @@ export default function BoardDetailPage() {
 
   async function handleCreate(data) {
     const created = await api.createCard(boardId, data)
-    setCards((prev) => sortCards([created, ...prev]))
+    setCards((prev) => sortCards([withGuestOwnership(created), ...prev]))
   }
 
   // Guests are allowed to add cards (spec §UA5). No auth gate on this path —
@@ -61,7 +68,11 @@ export default function BoardDetailPage() {
   }
 
   function handleDelete(id) {
-    requireAuth(async () => {
+    // Guests can delete their own anonymous cards using the stashed guestKey —
+    // no sign-in prompt needed for those. Signed-in ownership still routes
+    // through requireAuth so a logged-out session gets the auth modal instead
+    // of a silent 403 from the server.
+    const run = async () => {
       const prev = cards
       setCards((c) => c.filter((x) => x.id !== id))
       try {
@@ -69,7 +80,9 @@ export default function BoardDetailPage() {
       } catch {
         setCards(prev)
       }
-    })
+    }
+    if (isGuestOwned(id)) run()
+    else requireAuth(run)
   }
 
   function handleUpvote(id) {

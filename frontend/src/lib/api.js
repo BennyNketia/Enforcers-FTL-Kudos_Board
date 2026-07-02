@@ -31,6 +31,36 @@ client.interceptors.request.use((config) => {
   return config
 })
 
+// Guest-owned cards: the browser holds a per-card secret handed back by the
+// server at create time. Presenting it in `X-Guest-Key` lets a guest delete
+// their own anonymous card without an account. Map is `{ [cardId]: guestKey }`.
+const GUEST_KEYS_KEY = 'kudos-guest-card-keys'
+function readGuestKeys() {
+  try { return JSON.parse(localStorage.getItem(GUEST_KEYS_KEY) || '{}') }
+  catch { return {} }
+}
+function stashGuestKey(cardId, key) {
+  const map = readGuestKeys()
+  map[cardId] = key
+  localStorage.setItem(GUEST_KEYS_KEY, JSON.stringify(map))
+}
+function dropGuestKey(cardId) {
+  const map = readGuestKeys()
+  if (map[cardId]) {
+    delete map[cardId]
+    localStorage.setItem(GUEST_KEYS_KEY, JSON.stringify(map))
+  }
+}
+export function getGuestKey(cardId) {
+  return readGuestKeys()[cardId] || null
+}
+// Server-side isOwner only knows about signed-in creators. A guest is the
+// owner of a card iff we have its guestKey stashed locally. Callers OR this
+// onto the wire value before deciding whether to render a delete button.
+export function isGuestOwned(cardId) {
+  return Boolean(readGuestKeys()[cardId])
+}
+
 const BOARDS_KEY = 'kudos-boards'
 const CARDS_KEY = 'kudos-cards'
 const REPLIES_KEY = 'kudos-replies'
@@ -360,14 +390,39 @@ export const api = {
     USE_API ? http('GET', `/boards/${boardId}/cards`) : localGetCards(boardId),
 
   // POST /api/boards/:boardId/cards   { message, gifUrl, author? }
-  createCard: (boardId, data) =>
-    USE_API ? http('POST', `/boards/${boardId}/cards`, data) : localCreateCard(boardId, data),
+  // A guest response includes a one-time `guestKey`; we stash it in localStorage
+  // so this browser can later delete the card. Strip it before handing the card
+  // to callers so it never leaks into React state / the DOM.
+  createCard: (boardId, data) => {
+    if (!USE_API) return localCreateCard(boardId, data)
+    return http('POST', `/boards/${boardId}/cards`, data).then((card) => {
+      if (card?.guestKey) {
+        stashGuestKey(card.id, card.guestKey)
+        const { guestKey: _drop, ...clean } = card
+        return clean
+      }
+      return card
+    })
+  },
 
   // DELETE /api/boards/:boardId/cards/:cardId   → 204
-  deleteCard: (boardId, cardId) =>
-    USE_API
-      ? http('DELETE', `/boards/${boardId}/cards/${cardId}`)
-      : localDeleteCard(boardId, cardId),
+  // Sends X-Guest-Key when we've stashed one for this card (guest-created).
+  deleteCard: (boardId, cardId) => {
+    if (!USE_API) return localDeleteCard(boardId, cardId)
+    const guestKey = getGuestKey(cardId)
+    const headers = guestKey ? { 'X-Guest-Key': guestKey } : {}
+    return client
+      .delete(`/boards/${boardId}/cards/${cardId}`, { headers })
+      .then((res) => {
+        dropGuestKey(cardId)
+        return res.status === 204 ? null : res.data
+      })
+      .catch((err) => {
+        const status = err.response?.status ?? 0
+        const message = err.response?.data?.error || err.message || 'Request failed'
+        throw new ApiError(status, message)
+      })
+  },
 
   // PATCH /api/boards/:boardId/cards/:cardId/upvote   (no body)
   upvoteCard: (boardId, cardId) =>

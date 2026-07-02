@@ -51,7 +51,9 @@ router.get('/:boardId/cards', optionalAuth, listCards)
 // is present so the card gets stamped with an owner; without a token the
 // card is anonymous (Card.userId = null) and no one can later delete it.
 router.post('/:boardId/cards', optionalAuth, validateCreateCard, createCard)
-router.delete('/:boardId/cards/:cardId', authenticate, deleteCard)
+// Delete uses optionalAuth so guests can delete their own anonymous cards by
+// presenting the `X-Guest-Key` handed back at creation time (see cardsController).
+router.delete('/:boardId/cards/:cardId', optionalAuth, deleteCard)
 router.patch('/:boardId/cards/:cardId/upvote', authenticate, upvoteCard)
 router.patch('/:boardId/cards/:cardId/pin', authenticate, validatePin, pinCard)
 

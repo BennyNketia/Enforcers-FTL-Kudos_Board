@@ -1,0 +1,439 @@
+{
+  "info": {
+    "_postman_id": "b2c8f4a0-1e2a-4d5b-9c7f-8a1e0f9c3b21",
+    "name": "Kudos Board",
+    "description": "All backend routes for the Kudos Board API. Set baseUrl to your backend (default http://localhost:3000). Auth signup/login auto-populates the token variable; create-board / create-card / create-reply auto-populate boardId / cardId / replyId.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000", "type": "string" },
+    { "key": "token", "value": "", "type": "string" },
+    { "key": "boardId", "value": "", "type": "string" },
+    { "key": "cardId", "value": "", "type": "string" },
+    { "key": "replyId", "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "GET /api/health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "health"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "POST /api/auth/signup",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res && res.token) pm.collectionVariables.set('token', res.token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"testuser\",\n  \"password\": \"testpass\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/signup",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "signup"]
+            }
+          }
+        },
+        {
+          "name": "POST /api/auth/login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res && res.token) pm.collectionVariables.set('token', res.token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"testuser\",\n  \"password\": \"testpass\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "POST /api/auth/logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "logout"]
+            }
+          }
+        },
+        {
+          "name": "GET /api/auth/me",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "me"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Boards",
+      "item": [
+        {
+          "name": "GET /api/boards (list)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/boards?filter=all&search=",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "boards"],
+              "query": [
+                { "key": "filter", "value": "all", "description": "one of: all, recent, mine, celebration, thankyou, inspiration" },
+                { "key": "search", "value": "", "description": "case-insensitive title contains" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /api/boards/:boardId",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/boards/{{boardId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "boards", "{{boardId}}"]
+            }
+          }
+        },
+        {
+          "name": "POST /api/boards (create)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res && res.id) pm.collectionVariables.set('boardId', res.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"My test board\",\n  \"category\": \"celebration\",\n  \"imageUrl\": \"\",\n  \"author\": \"Postman\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/boards",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "boards"]
+            },
+            "description": "category must be one of: celebration, thankyou, inspiration."
+          }
+        },
+        {
+          "name": "DELETE /api/boards/:boardId",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/boards/{{boardId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "boards", "{{boardId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cards",
+      "item": [
+        {
+          "name": "GET /api/boards/:boardId/cards",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/boards/{{boardId}}/cards",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "boards", "{{boardId}}", "cards"]
+            }
+          }
+        },
+        {
+          "name": "POST /api/boards/:boardId/cards (create)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res && res.id) pm.collectionVariables.set('cardId', res.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}", "description": "Optional — guests can create cards; auth stamps the owner." }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Great work on shipping this!\",\n  \"gifUrl\": \"https://media.giphy.com/media/26u4cqiYI30juCOGY/giphy.gif\",\n  \"author\": \"Postman\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/boards/{{boardId}}/cards",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "boards", "{{boardId}}", "cards"]
+            }
+          }
+        },
+        {
+          "name": "DELETE /api/boards/:boardId/cards/:cardId",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/boards/{{boardId}}/cards/{{cardId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "boards", "{{boardId}}", "cards", "{{cardId}}"]
+            }
+          }
+        },
+        {
+          "name": "PATCH /api/boards/:boardId/cards/:cardId/upvote",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/boards/{{boardId}}/cards/{{cardId}}/upvote",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "boards", "{{boardId}}", "cards", "{{cardId}}", "upvote"]
+            }
+          }
+        },
+        {
+          "name": "PATCH /api/boards/:boardId/cards/:cardId/pin",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pinned\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/boards/{{boardId}}/cards/{{cardId}}/pin",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "boards", "{{boardId}}", "cards", "{{cardId}}", "pin"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Replies",
+      "item": [
+        {
+          "name": "GET /api/boards/:boardId/cards/:cardId/replies",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/boards/{{boardId}}/cards/{{cardId}}/replies",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "boards", "{{boardId}}", "cards", "{{cardId}}", "replies"]
+            }
+          }
+        },
+        {
+          "name": "POST /api/boards/:boardId/cards/:cardId/replies (create)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res && res.id) pm.collectionVariables.set('replyId', res.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Agreed!\",\n  \"gifUrl\": \"\",\n  \"author\": \"Postman\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/boards/{{boardId}}/cards/{{cardId}}/replies",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "boards", "{{boardId}}", "cards", "{{cardId}}", "replies"]
+            },
+            "description": "Either message or gifUrl is required (or both)."
+          }
+        },
+        {
+          "name": "DELETE /api/boards/:boardId/cards/:cardId/replies/:replyId",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/boards/{{boardId}}/cards/{{cardId}}/replies/{{replyId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "boards", "{{boardId}}", "cards", "{{cardId}}", "replies", "{{replyId}}"]
+            }
+          }
+        },
+        {
+          "name": "PATCH /api/boards/:boardId/cards/:cardId/replies/:replyId/like",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/boards/{{boardId}}/cards/{{cardId}}/replies/{{replyId}}/like",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "boards", "{{boardId}}", "cards", "{{cardId}}", "replies", "{{replyId}}", "like"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AI",
+      "item": [
+        {
+          "name": "POST /api/ai/compose",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"keywords\": \"shipped the release ahead of schedule, unblocked the team\",\n  \"tone\": \"heartfelt\",\n  \"recipient\": \"Sam\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/ai/compose",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "ai", "compose"]
+            },
+            "description": "tone: heartfelt | funny | professional | poetic | hype"
+          }
+        },
+        {
+          "name": "POST /api/ai/suggest-gifs",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Congrats on the launch — you crushed it!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/ai/suggest-gifs",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "ai", "suggest-gifs"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Giphy",
+      "item": [
+        {
+          "name": "GET /api/giphy/search",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/giphy/search?q=celebration&limit=12",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "giphy", "search"],
+              "query": [
+                { "key": "q", "value": "celebration", "description": "omit for trending GIFs" },
+                { "key": "limit", "value": "12" }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

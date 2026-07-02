@@ -10,6 +10,7 @@
 // then unpinned by `createdAt` desc. SQL `ORDER BY pinned DESC, pinnedAt DESC NULLS LAST,
 // createdAt DESC` gives that in one query.
 
+import { randomUUID } from 'node:crypto'
 import { Prisma } from '@prisma/client'
 import { prisma } from '../lib/prisma.js'
 import { serializeCard } from '../lib/serialize.js'
@@ -60,40 +61,55 @@ export async function listCards(req, res, next) {
 
 // POST /api/boards/:boardId/cards   (optionalAuth — guests allowed, spec §UA5)
 // Any user (signed in or guest) can add a card to any board. Signed-in cards
-// get stamped with the caller's id so they can delete them later; guest
-// cards have userId=null and are undeletable via the API (no owner to match).
+// are stamped with the caller's userId. Guest cards get a random `guestKey`
+// that is echoed once in the response body; the creating browser stores it in
+// localStorage and returns it in `X-Guest-Key` to authorize a later delete.
 export async function createCard(req, res, next) {
   try {
     await assertBoardExists(req.params.boardId)
     const { message, gifUrl, author } = req.body
+    const isGuest = !req.userId
+    const guestKey = isGuest ? randomUUID() : null
     const card = await prisma.card.create({
       data: {
         boardId: req.params.boardId,
         userId: req.userId ?? null,
+        guestKey,
         message: message.trim(),
         gifUrl: gifUrl.trim(),
         author: author?.trim() || null,
       },
     })
-    res.status(201).json(serializeCard(card, req.userId))
+    // The serializer intentionally hides guestKey. Attach it only on the create
+    // response (once, to the owning browser) so it can bank it for later delete.
+    const body = serializeCard(card, req.userId)
+    if (guestKey) body.guestKey = guestKey
+    res.status(201).json(body)
   } catch (err) {
     if (err.status === 404) return res.status(404).json({ error: err.message })
     next(err)
   }
 }
 
-// DELETE /api/boards/:boardId/cards/:cardId   (auth required)
-// Only the card's creator may delete it — being the board owner doesn't grant
-// rights over other users' cards.
+// DELETE /api/boards/:boardId/cards/:cardId   (optionalAuth)
+// Two ways to authorize:
+//   1. Signed-in creator: card.userId matches req.userId.
+//   2. Guest creator: the browser that made the card presents its stored
+//      `guestKey` in the X-Guest-Key header, matched against card.guestKey.
+// Being the board owner does NOT grant delete rights over other users' cards.
 export async function deleteCard(req, res, next) {
   try {
     const { boardId, cardId } = req.params
     const card = await prisma.card.findFirst({
       where: { id: cardId, boardId },
-      select: { userId: true },
+      select: { userId: true, guestKey: true },
     })
     if (!card) return res.status(404).json({ error: 'Card not found.' })
-    if (card.userId !== req.userId) {
+
+    const guestKey = req.get('x-guest-key') || null
+    const isSignedInOwner = req.userId && card.userId === req.userId
+    const isGuestOwner = card.guestKey && guestKey && guestKey === card.guestKey
+    if (!isSignedInOwner && !isGuestOwner) {
       return res.status(403).json({ error: 'Only the creator can delete this card.' })
     }
 
