@@ -20,6 +20,34 @@ const TONES = {
 
 const MAX_KEYWORDS_LEN = 500
 
+// Free models sometimes prepend narration ("Here is a heartfelt message:",
+// "Sure!", a "We need to produce…" restatement of the task) before the actual
+// message, or wrap the whole thing in quotes. Strip those so the composer only
+// hands back the message itself.
+function cleanMessage(raw) {
+  let text = String(raw).trim()
+
+  // Reasoning models sometimes wrap their thinking in <think>…</think> before
+  // the answer. Drop any such block (and a stray closing tag) entirely.
+  text = text.replace(/<think>[\s\S]*?<\/think>/gi, '').replace(/^[\s\S]*<\/think>/i, '').trim()
+
+  // A lead-in phrase followed by a colon on the same line, e.g.
+  // "Here's a heartfelt note: <message>" or "We need to produce a message: …".
+  // Stops at the FIRST colon (excludes ':' from the run) so we never chew into
+  // the message itself, and never treats a hyphen/em-dash as a terminator.
+  const leadInColon = /^(?:sure|okay|ok|of course|certainly|absolutely|here(?:'s| is| you go)?|below is|i(?:'ve| have) (?:written|drafted)|we need to|this is)\b[^\n:]*:\s*/i
+  text = text.replace(leadInColon, '').trim()
+
+  // A short interjection lead-in ending in '!' , ',' or '.', e.g. "Sure! <msg>".
+  const interjection = /^(?:sure|okay|ok|of course|certainly|absolutely|no problem)[!,.]\s+/i
+  text = text.replace(interjection, '').trim()
+
+  // Strip a wrapping pair of quotes if the model quoted the whole message.
+  text = text.replace(/^["'“”]+/, '').replace(/["'“”]+$/, '').trim()
+
+  return text
+}
+
 /**
  * POST /api/ai/compose
  * Body: { keywords: string, tone?: string, recipient?: string }
@@ -47,33 +75,49 @@ export async function compose(req, res, next) {
       })
     }
 
-    const recipientLine =
-      typeof recipient === 'string' && recipient.trim()
-        ? `The kudos is addressed to: ${recipient.trim()}.`
-        : 'The recipient may not be named — keep it natural either way.'
+    const recipientName =
+      typeof recipient === 'string' && recipient.trim() ? recipient.trim() : ''
 
     const message = await chat(
       [
         {
           role: 'system',
           content:
-            'You write short, original kudos messages — notes of praise, thanks, and ' +
-            'appreciation for a coworker or friend. Rules: 1–2 sentences, under 280 characters. ' +
-            `Use a ${toneDesc} tone. Write in second person ("you") when natural. ` +
-            'Do NOT use hashtags, emojis, surrounding quotation marks, or a sign-off/signature. ' +
-            'Output ONLY the message text, nothing else.',
+            'You are a kudos-writing assistant. Given a recipient and a few rough notes, ' +
+            'you WRITE the finished kudos message — a short note of praise, thanks, and ' +
+            'appreciation addressed directly to that person.\n\n' +
+            'Rules:\n' +
+            '- Output ONLY the finished message, ready to post as-is.\n' +
+            '- 1–2 sentences, under 280 characters.\n' +
+            `- ${toneDesc} tone.\n` +
+            '- Write in second person ("you") when it reads naturally.\n' +
+            '- No hashtags, no emojis, no surrounding quotation marks, no sign-off or signature.\n' +
+            '- Do NOT restate these instructions, do NOT explain your reasoning, and do NOT ' +
+            'describe the task (never write things like "Here is" or "We need to produce"). ' +
+            'Just write the message itself.',
+        },
+        // One-shot example so the model locks onto input→output, not narration.
+        {
+          role: 'user',
+          content:
+            'Recipient: Sarah\nNotes: covered my weekend shift, total lifesaver, saved the launch',
+        },
+        {
+          role: 'assistant',
+          content:
+            'Sarah, you completely saved the launch by covering my weekend shift — I honestly ' +
+            "don't know what we'd have done without you. Thank you for being such a lifesaver.",
         },
         {
           role: 'user',
-          content: `${recipientLine}\nWhat they did / notes: ${keywords.trim()}`,
+          content:
+            `Recipient: ${recipientName || '(not named)'}\nNotes: ${keywords.trim()}`,
         },
       ],
-      { temperature: 0.9, maxTokens: 160 },
+      { temperature: 0.8, maxTokens: 160 },
     )
 
-    // Strip wrapping quotes the model sometimes adds despite instructions.
-    const cleaned = message.replace(/^["'“”]+|["'“”]+$/g, '').trim()
-    res.json({ message: cleaned })
+    res.json({ message: cleanMessage(message) })
   } catch (err) {
     next(err)
   }

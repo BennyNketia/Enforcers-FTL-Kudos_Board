@@ -55,6 +55,13 @@ app.use((err, _req, res, _next) => {
   ) {
     return res.status(500).json({ error: err.message })
   }
+  // All free AI models were rate-limited upstream — not our bug, and a retry
+  // usually succeeds. Tell the user that plainly instead of a generic 500.
+  if (err.status === 429) {
+    return res.status(503).json({
+      error: 'The free AI models are busy right now. Please wait a moment and try again.',
+    })
+  }
   console.error('[error]', err)
   res.status(500).json({ error: 'Something went wrong on the server.' })
 })

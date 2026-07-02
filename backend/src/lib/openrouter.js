@@ -17,12 +17,16 @@ const REQUEST_TIMEOUT_MS = 30_000
 // single upstream outage/throttle doesn't take them all down at once. If a model
 // id 404s (delisted), the chain skips past it — refresh this list occasionally
 // via GET https://openrouter.ai/api/v1/models.
+// IMPORTANT: instruct/chat models ONLY — no "reasoning" models. Reasoning models
+// (e.g. gpt-oss, nemotron) stream their chain-of-thought into the message content
+// and burn the whole token budget before writing the answer, which leaks "First,
+// I need to recall the rules…" into the kudos or truncates it mid-sentence.
 const FALLBACK_MODELS = [
   'meta-llama/llama-3.3-70b-instruct:free',
-  'openai/gpt-oss-120b:free',
   'qwen/qwen3-next-80b-a3b-instruct:free',
   'google/gemma-4-31b-it:free',
-  'nvidia/nemotron-3-super-120b-a12b:free',
+  'nousresearch/hermes-3-llama-3.1-405b:free',
+  'meta-llama/llama-3.2-3b-instruct:free',
 ]
 
 function modelChain() {
@@ -69,7 +73,16 @@ async function requestModel(model, messages, { temperature, maxTokens }) {
         'HTTP-Referer': process.env.OPENROUTER_APP_URL || 'http://localhost:5173',
         'X-Title': process.env.OPENROUTER_APP_TITLE || 'Kudos Board',
       },
-      body: JSON.stringify({ model, messages, temperature, max_tokens: maxTokens }),
+      // reasoning.exclude keeps any model's chain-of-thought out of the response
+      // so it can't leak into (or crowd out) the actual message. Ignored by
+      // models that don't reason.
+      body: JSON.stringify({
+        model,
+        messages,
+        temperature,
+        max_tokens: maxTokens,
+        reasoning: { exclude: true },
+      }),
     })
 
     if (!res.ok) {
